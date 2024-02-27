@@ -10,8 +10,8 @@ import (
 
 func Routes(app *api.Application) http.Handler {
 	router := httprouter.New()
-	// router.NotFound = http.HandlerFunc(app.notFoundResponse)
-	// router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+	router.NotFound = http.HandlerFunc(app.NotFoundResponse)
+	router.MethodNotAllowed = http.HandlerFunc(app.MethodNotAllowedResponse)
 
 	//Healthcheck
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.HealthcheckHandler)
@@ -19,9 +19,12 @@ func Routes(app *api.Application) http.Handler {
 	//Users auth
 	router.HandlerFunc(http.MethodPost, "/v1/login", app.LoginHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/register", app.RegisterUserHandler)
-	//metrics
+	router.HandlerFunc(http.MethodPost, "/v1/password-reset", app.CreatePasswordResetTokenHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/users/password", app.UpdateUserPasswordHandler)
+	//Metrics
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
-	//
-	return router
+	//Middleware
+	//remove metric in prod!
+	return app.Metrics(app.RecoverPanic(app.RateLimit(router)))
 }
