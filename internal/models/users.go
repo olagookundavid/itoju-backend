@@ -128,7 +128,7 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 }
 
 func (m UserModel) Update(user *User) error {
-	query := ` UPDATE users SET first_name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1, last_name = $5, date_of_birth = $6,
+	query := ` UPDATE users SET first_name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1, last_name = $5, date_of_birth = $6
 	WHERE id = $7 AND version = $8
 	RETURNING version`
 	args := []any{user.FirstName, user.Email, user.Password.hash, user.Activated, user.LastName, user.Dob, user.ID, user.Version}
