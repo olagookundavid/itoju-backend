@@ -116,7 +116,7 @@ func (app *Application) readInt(qs url.Values, key string, defaultValue int, v *
 	return i
 }
 
-func (app *Application) background(fn func()) {
+func (app *Application) Background(fn func()) {
 	// Increment the WaitGroup counter.
 	app.Wg.Add(1)
 
@@ -133,5 +133,6 @@ func (app *Application) background(fn func()) {
 		}()
 		// Execute the arbitrary function that we passed as the parameter.
 		fn()
+		app.Wg.Wait()
 	}()
 }

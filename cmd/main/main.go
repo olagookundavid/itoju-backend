@@ -23,6 +23,7 @@ import (
 	"github.com/olagookundavid/itoju/internal/models"
 	"github.com/olagookundavid/itoju/internal/server"
 	"github.com/olagookundavid/itoju/internal/vcs"
+	"github.com/robfig/cron/v3"
 )
 
 // Declare a string containing the application version number. Later in the book we'll // generate this automatically at build time, but for now we'll just store the version // number as a hard-coded global constant.
@@ -82,6 +83,8 @@ func main() {
 		Models: models.NewModels(db),
 	}
 
+	go cronJob(app)
+
 	err = server.Serve(app)
 	if err != nil {
 		logger.PrintFatal(err, nil)
@@ -110,4 +113,32 @@ func openDB(cfg api.Config) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
+}
+
+func cronJob(app *api.Application) {
+	// 	ticker := time.NewTicker(2 * time.Second)
+	// 	defer ticker.Stop()
+	//	for {
+	//		select {
+	//		case <-ticker.C:
+	//			fmt.Println("Running task every second")
+	//		}
+	//	}
+	c := cron.New()
+
+	_, err := c.AddFunc("@daily", func() {
+		app.Logger.PrintInfo("Deleting Tokens from tokens table", map[string]string{"": ""})
+		err := app.Models.Tokens.DeleteAllExpiredTokens()
+		if err != nil {
+			app.Logger.PrintError(err, map[string]string{"error": "An error occured with deleting tokens from Tokens Table"})
+			return
+		}
+	})
+
+	if err != nil {
+		app.Logger.PrintError(err, map[string]string{"error": "An error occured with cron job"})
+		return
+	}
+
+	c.Start()
 }

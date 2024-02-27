@@ -78,9 +78,10 @@ func (m TokenModel) DeleteAllForUser(scope string, userID string) error {
 }
 
 func (m TokenModel) DeleteAllExpiredTokens() error {
-	query := ` DELETE FROM tokens WHERE tokens.expiry > NOW()`
+	query := ` DELETE FROM tokens WHERE tokens.expiry < NOW()`
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query)
+
 	return err
 }

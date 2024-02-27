@@ -77,6 +77,7 @@ func ValidatePasswordPlaintext(v *validator.Validator, password string) {
 func ValidateUser(v *validator.Validator, user *User) {
 	v.Check(user.FirstName != "", "first name", "must be provided")
 	v.Check(user.LastName != "", "last name", "must be provided")
+	v.Check(user.Dob.String() != "", "Date of birth", "must be provided")
 	v.Check(len(user.FirstName) <= 500, "first_name", "must not be more than 500 bytes long")
 	v.Check(len(user.LastName) <= 500, "last_name", "must not be more than 500 bytes long")
 	v.Check(time.Since(user.Dob) >= 18*365*24*time.Hour, "dob", "must not be older than 18years")
