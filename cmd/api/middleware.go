@@ -1,13 +1,17 @@
 package api
 
 import (
+	"errors"
 	"expvar"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/olagookundavid/itoju/internal/models"
+	"github.com/olagookundavid/itoju/internal/validator"
 	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 )
@@ -53,6 +57,7 @@ func (app *Application) RateLimit(next http.Handler) http.Handler {
 		defer next.ServeHTTP(w, r)
 
 		if app.Config.Limiter.Enabled {
+			println("rater")
 			ip := realip.FromRequest(r)
 			mu.Lock()
 			if _, found := clients[ip]; !found {
@@ -71,6 +76,61 @@ func (app *Application) RateLimit(next http.Handler) http.Handler {
 			mu.Unlock()
 			return
 		}
+	})
+}
+
+func (app *Application) RequireActivatedAndAuthedUser(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+		if !user.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *Application) Authenticate(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Authorization")
+		authorizationHeader := r.Header.Get("Authorization")
+		if authorizationHeader == "" {
+			r = app.contextSetUser(r, models.AnonymousUser)
+			next.ServeHTTP(w, r)
+			println("anon")
+			return
+		}
+		headerParts := strings.Split(authorizationHeader, " ")
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+		token := headerParts[1]
+		v := validator.New()
+		if models.ValidateTokenPlaintext(v, token); !v.Valid() {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		user, err := app.Models.Users.GetForToken(models.ScopeAuthentication, token)
+		if err != nil {
+			switch {
+			case errors.Is(err, models.ErrRecordNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+
+		r = app.contextSetUser(r, user)
+		println("not anon")
+		next.ServeHTTP(w, r)
 	})
 }
 
