@@ -63,7 +63,9 @@ func (app *Application) RegisterUserHandler(w http.ResponseWriter, r *http.Reque
 	// 		app.logger.PrintError(err, nil)
 	// 	}
 	// })
-	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope{
+		"message": "Successful Registered User",
+		"user":    user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -154,7 +156,6 @@ func (app *Application) ChangeUserPasswordHandler(w http.ResponseWriter, r *http
 		return
 	}
 	user := app.contextGetUser(r)
-	println("success")
 	match, err := user.Password.Matches(input.Password)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -183,6 +184,19 @@ func (app *Application) ChangeUserPasswordHandler(w http.ResponseWriter, r *http
 	// Send the user a confirmation message.
 	env := envelope{"message": "your password was successfully changed"}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+	print("successful")
+
+	env := envelope{
+		"message": "Retrieved User Profile",
+		"user":    user}
+	err := app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

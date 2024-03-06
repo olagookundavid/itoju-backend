@@ -86,6 +86,7 @@ func (app *Application) RequireActivatedAndAuthedUser(next http.HandlerFunc) htt
 			app.authenticationRequiredResponse(w, r)
 			return
 		}
+
 		if !user.Activated {
 			app.inactiveAccountResponse(w, r)
 			return
@@ -107,13 +108,19 @@ func (app *Application) Authenticate(next http.Handler) http.Handler {
 		}
 		headerParts := strings.Split(authorizationHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			app.invalidAuthenticationTokenResponse(w, r)
+			r = app.contextSetUser(r, models.AnonymousUser)
+			next.ServeHTTP(w, r)
+			println("anon")
+			// app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 		token := headerParts[1]
 		v := validator.New()
 		if models.ValidateTokenPlaintext(v, token); !v.Valid() {
-			app.invalidAuthenticationTokenResponse(w, r)
+			r = app.contextSetUser(r, models.AnonymousUser)
+			next.ServeHTTP(w, r)
+			println("anon")
+			// app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -121,7 +128,10 @@ func (app *Application) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, models.ErrRecordNotFound):
-				app.invalidAuthenticationTokenResponse(w, r)
+				// app.invalidAuthenticationTokenResponse(w, r)
+				r = app.contextSetUser(r, models.AnonymousUser)
+				next.ServeHTTP(w, r)
+				println("anon")
 			default:
 				app.serverErrorResponse(w, r, err)
 			}
