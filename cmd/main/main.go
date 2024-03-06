@@ -127,7 +127,7 @@ func cronJob(app *api.Application) {
 	c := cron.New()
 
 	_, err := c.AddFunc("@daily", func() {
-		app.Logger.PrintInfo("Deleting Tokens from tokens table", map[string]string{"": ""})
+		app.Logger.PrintInfo("Deleting Tokens from tokens table", nil)
 		err := app.Models.Tokens.DeleteAllExpiredTokens()
 		if err != nil {
 			app.Logger.PrintError(err, map[string]string{"error": "An error occured with deleting tokens from Tokens Table"})

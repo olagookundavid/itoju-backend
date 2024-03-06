@@ -63,7 +63,9 @@ func (app *Application) RegisterUserHandler(w http.ResponseWriter, r *http.Reque
 	// 		app.logger.PrintError(err, nil)
 	// 	}
 	// })
-	err = app.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope{
+		"message": "Successful Registered User",
+		"user":    user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -124,6 +126,77 @@ func (app *Application) UpdateUserPasswordHandler(w http.ResponseWriter, r *http
 	// Send the user a confirmation message.
 	env := envelope{"message": "your password was successfully reset"}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) ChangeUserPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse and validate the user's new password and password reset token.
+	var input struct {
+		Password           string `json:"password"`
+		NewPassword        string `json:"new_password"`
+		ConfirmNewPassword string `json:"confirm_new_password"`
+	}
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+	v.Check(input.NewPassword == input.ConfirmNewPassword, "new password", "doesn't match confirm password")
+	v.Check(input.NewPassword != input.Password, "password", "old and new password are the same")
+	models.ValidatePasswordPlaintext(v, input.Password)
+	models.ValidatePasswordPlaintext(v, input.ConfirmNewPassword)
+	models.ValidatePasswordPlaintext(v, input.NewPassword)
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+	user := app.contextGetUser(r)
+	match, err := user.Password.Matches(input.Password)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	if !match {
+		app.invalidCredentialsResponse(w, r)
+		return
+	}
+	err = user.Password.Set(input.NewPassword)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	// Save the updated user record in our database, checking for any edit conflicts as normal
+	err = app.Models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	// Send the user a confirmation message.
+	env := envelope{"message": "your password was successfully changed"}
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+	print("successful")
+
+	env := envelope{
+		"message": "Retrieved User Profile",
+		"user":    user}
+	err := app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

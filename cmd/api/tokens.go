@@ -52,13 +52,12 @@ func (app *Application) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Encode the token to JSON and send it in the response along with a 201 Created // status code.
-	err = app.writeJSON(w, http.StatusCreated, envelope{"authentication_token": token}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Successfully logged in User", "data": token}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
-// Generate a password reset token and send it to the user's email address.
 func (app *Application) CreatePasswordResetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse and validate the user's email address.
 	var input struct {
@@ -115,11 +114,29 @@ func (app *Application) CreatePasswordResetTokenHandler(w http.ResponseWriter, r
 	// Send a 202 Accepted response and confirmation message to the client.
 	//for now token is sent in body
 	env := envelope{
-		"message": "an email will be sent to you containing password reset instructions",
+		"message": "An email will be sent to you containing password reset instructions",
 		"token":   token.Plaintext,
 	}
-	err = app.writeJSON(w, http.StatusAccepted, env, nil)
+	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+// go func(metricID int) {
+// 	defer wg.Done()
+// 	defer func() {
+// 		if err := recover(); err != nil {
+// 			logger.PrintError(fmt.Errorf("%s", err), nil)
+// 		}
+// 	}()
+// 	_, err := m.DB.ExecContext(ctx, query, userID, metricID)
+// 	if err != nil {
+// 		errors <- err
+// 		return
+// 	}
+// 	done <- true
+// 	wg.Wait()
+// }(metricID)
+
+// logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)

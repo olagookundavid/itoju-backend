@@ -117,21 +117,14 @@ func (app *Application) readInt(qs url.Values, key string, defaultValue int, v *
 }
 
 func (app *Application) Background(fn func()) {
-	// Increment the WaitGroup counter.
 	app.Wg.Add(1)
-
-	// Launch a background goroutine.
 	go func() {
-		// Use defer to decrement the WaitGroup counter before the goroutine returns.
 		defer app.Wg.Done()
-
-		// Recover any panic.
 		defer func() {
 			if err := recover(); err != nil {
 				app.Logger.PrintError(fmt.Errorf("%s", err), nil)
 			}
 		}()
-		// Execute the arbitrary function that we passed as the parameter.
 		fn()
 		app.Wg.Wait()
 	}()
