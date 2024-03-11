@@ -38,6 +38,18 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodPost, "/v1/user/smileys", app.RequireActivatedAndAuthedUser((app.InsertUserSmileys)))
 	router.Handler(http.MethodGet, "/v1/user/smileys_count/:id", app.RequireActivatedAndAuthedUser((app.GetUserSmileysCount)))
 
+	//User symptoms
+	router.HandlerFunc(http.MethodGet, "/v1/allsymptoms", (app.GetSymptoms))
+	router.Handler(http.MethodGet, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.GetUserSymptoms)))
+	router.Handler(http.MethodPost, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.InsertUserSymptoms)))
+	router.Handler(http.MethodDelete, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.DeleteUserSymptoms)))
+
+	//User conditions
+	router.HandlerFunc(http.MethodGet, "/v1/allconditions", (app.GetConditions))
+	router.Handler(http.MethodGet, "/v1/user/conditions", app.RequireActivatedAndAuthedUser((app.GetUserConditions)))
+	router.Handler(http.MethodPost, "/v1/user/conditions", app.RequireActivatedAndAuthedUser((app.InsertUserConditions)))
+	router.Handler(http.MethodDelete, "/v1/user/conditions", app.RequireActivatedAndAuthedUser((app.DeleteUserConditions)))
+
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())
 

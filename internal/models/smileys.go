@@ -92,33 +92,36 @@ func (m SmileysModel) InsertUserSmileys(userID string, smiley Smileys) error {
 	return err
 }
 
-func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*SmileysCount, error) {
+func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*SmileysCount, *int, error) {
+
 	query := fmt.Sprintf(`
-    SELECT smiley.name, smiley.id, COUNT(*) AS count
+    SELECT smiley.name, smiley.id, COUNT(*) AS count,
+    (SELECT COUNT(*) FROM user_smiley WHERE user_id = $1 AND granted_at >= NOW() - INTERVAL '%d days') AS total_count
     FROM smiley
     JOIN user_smiley ON smiley.id = user_smiley.smiley_id
     WHERE user_smiley.user_id = $1
     AND user_smiley.granted_at >= NOW() - INTERVAL '%d days'
-    GROUP BY smiley.name, smiley.id; `, interval)
+    GROUP BY smiley.name, smiley.id; `, interval, interval)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	rows, err := m.DB.QueryContext(ctx, query, userID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer rows.Close()
 	smileys := []*SmileysCount{}
+	var totalCount int
 	for rows.Next() {
 		var smiley SmileysCount
-		err := rows.Scan(&smiley.Name, &smiley.Id, &smiley.Count)
+		err := rows.Scan(&smiley.Name, &smiley.Id, &smiley.Count, &totalCount)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		smileys = append(smileys, &smiley)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return smileys, nil
+	return smileys, &totalCount, nil
 }

@@ -24,7 +24,15 @@ func (app *Application) SetUserMetrics(w http.ResponseWriter, r *http.Request) {
 	err = app.Models.Metrics.SetUserMetrics(input.Metrics, user.ID, done, error)
 
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, models.ErrRecordAlreadyExist):
+			app.failedValidationResponse(w, r,
+				map[string]string{
+					"Metrics": "Already exists"},
+			)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 	close(error)

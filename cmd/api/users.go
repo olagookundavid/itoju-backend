@@ -191,8 +191,6 @@ func (app *Application) ChangeUserPasswordHandler(w http.ResponseWriter, r *http
 
 func (app *Application) GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	print("successful")
-
 	env := envelope{
 		"message": "Retrieved User Profile",
 		"user":    user}

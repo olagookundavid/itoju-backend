@@ -83,15 +83,17 @@ func (app *Application) GetUserSmileysCount(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	smileys, err := app.Models.Smileys.GetUserSmileysCount(user.ID, int(id))
+	smileys, totalCount, err := app.Models.Smileys.GetUserSmileysCount(user.ID, int(id))
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	env := envelope{
-		"message":       fmt.Sprintf("Retrieved All Smiley's count for User in %d day(s)", id),
-		"smileys count": smileys}
+		"message":     fmt.Sprintf("Retrieved All Smiley's count for User in %d day(s)", id),
+		"smileys":     smileys,
+		"total_count": totalCount,
+	}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
