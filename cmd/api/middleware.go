@@ -54,7 +54,6 @@ func (app *Application) RateLimit(next http.Handler) http.Handler {
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer next.ServeHTTP(w, r)
 
 		if app.Config.Limiter.Enabled {
 			println("rater")
@@ -69,11 +68,14 @@ func (app *Application) RateLimit(next http.Handler) http.Handler {
 			}
 			clients[ip].lastSeen = time.Now()
 			if !clients[ip].limiter.Allow() {
+				println("rater2")
 				mu.Unlock()
 				app.rateLimitExceededResponse(w, r)
 				return
 			}
+			println("rater3")
 			mu.Unlock()
+			next.ServeHTTP(w, r)
 			return
 		}
 	})
@@ -82,6 +84,12 @@ func (app *Application) RateLimit(next http.Handler) http.Handler {
 func (app *Application) RequireActivatedAndAuthedUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
+		status := app.contextGetStatus(r)
+
+		if !status {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
 		if user.IsAnonymous() {
 			app.authenticationRequiredResponse(w, r)
 			return
@@ -102,25 +110,26 @@ func (app *Application) Authenticate(next http.Handler) http.Handler {
 		authorizationHeader := r.Header.Get("Authorization")
 		if authorizationHeader == "" {
 			r = app.contextSetUser(r, models.AnonymousUser)
+			r = app.contextSetTokenStatus(r, true)
 			next.ServeHTTP(w, r)
-			println("anon")
+			println("anon1")
 			return
 		}
 		headerParts := strings.Split(authorizationHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
 			r = app.contextSetUser(r, models.AnonymousUser)
+			r = app.contextSetTokenStatus(r, false)
 			next.ServeHTTP(w, r)
-			println("anon")
-			// app.invalidAuthenticationTokenResponse(w, r)
+			println("anon2")
 			return
 		}
 		token := headerParts[1]
 		v := validator.New()
 		if models.ValidateTokenPlaintext(v, token); !v.Valid() {
 			r = app.contextSetUser(r, models.AnonymousUser)
+			r = app.contextSetTokenStatus(r, false)
 			next.ServeHTTP(w, r)
-			println("anon")
-			// app.invalidAuthenticationTokenResponse(w, r)
+			println("anon2")
 			return
 		}
 
@@ -128,16 +137,17 @@ func (app *Application) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, models.ErrRecordNotFound):
-				// app.invalidAuthenticationTokenResponse(w, r)
 				r = app.contextSetUser(r, models.AnonymousUser)
+				r = app.contextSetTokenStatus(r, false)
 				next.ServeHTTP(w, r)
-				println("anon")
+				println("anon3")
 			default:
 				app.serverErrorResponse(w, r, err)
 			}
 			return
 		}
 
+		r = app.contextSetTokenStatus(r, true)
 		r = app.contextSetUser(r, user)
 		println("not anon")
 		next.ServeHTTP(w, r)

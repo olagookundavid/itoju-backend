@@ -34,9 +34,14 @@ func (m MetricsModel) SetUserMetrics(selectedMetrics []int, userID string, done 
 			// Execute the insertion for the current metric.
 			_, err := m.DB.ExecContext(ctx, query, userID, metricID)
 			if err != nil {
-				// Send the error to the error channel.
-				error <- err
-				return
+				switch {
+				case err.Error() == `pq: duplicate key value violates unique constraint "unique_user_trackedmetric"`:
+					error <- ErrRecordAlreadyExist
+					return
+				default:
+					error <- err
+					return
+				}
 			}
 			done <- true
 		}(metricID)
@@ -107,11 +112,9 @@ func (m MetricsModel) GetUserMetrics(userID string) ([]*Metrics, error) {
 }
 
 func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int, done chan bool, error chan error) error {
-
-	// errors := make(chan error)
-	// done := make(chan bool)
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+
 	query := ` DELETE FROM user_trackedmetric
 	WHERE user_id = $1
 	AND metric_id = $2; `
