@@ -50,6 +50,20 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodPost, "/v1/user/conditions", app.RequireActivatedAndAuthedUser((app.InsertUserConditions)))
 	router.Handler(http.MethodDelete, "/v1/user/conditions", app.RequireActivatedAndAuthedUser((app.DeleteUserConditions)))
 
+	//Resources
+	router.HandlerFunc(http.MethodGet, "/v1/resources", (app.GetResources))
+	router.HandlerFunc(http.MethodPost, "/v1/resources", (app.InsertResources))
+	router.HandlerFunc(http.MethodPut, "/v1/resources/:id", (app.UpdateResources))
+	router.HandlerFunc(http.MethodDelete, "/v1/resources/:id", (app.DeleteResources))
+
+	//Setting
+	router.Handler(http.MethodPost, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.InsertMenses)))
+	router.Handler(http.MethodGet, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.GetMenses)))
+	router.Handler(http.MethodPut, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.UpdateMenses)))
+	router.Handler(http.MethodPost, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.InsertBodyMeasure)))
+	router.Handler(http.MethodGet, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.GetBodyMeasure)))
+	router.Handler(http.MethodPut, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.UpdateBodyMeasure)))
+
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())
 

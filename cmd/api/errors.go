@@ -79,3 +79,9 @@ func (app *Application) notPermittedResponse(w http.ResponseWriter, r *http.Requ
 	message := "your user account doesn't have the necessary permissions to access this resource"
 	app.errorResponse(w, r, http.StatusForbidden, message)
 }
+
+func (app *Application) NotYetSet(w http.ResponseWriter, r *http.Request) {
+	message := "the requested resource has not been set"
+	//i have set 380 to not set!
+	app.errorResponse(w, r, 380, message)
+}
