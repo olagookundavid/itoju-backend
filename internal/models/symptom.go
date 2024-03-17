@@ -97,10 +97,8 @@ func (m SymptomsModel) SetUserSymptoms(selectedSymptoms []int, userID string, do
 				switch {
 				case err.Error() == `pq: duplicate key value violates unique constraint "user_symptoms_pkey"`:
 					error <- ErrRecordAlreadyExist
-					// print(err.Error())
 					return
 				default:
-					// print(err.Error())
 					error <- err
 					return
 				}

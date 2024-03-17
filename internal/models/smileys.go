@@ -17,8 +17,8 @@ type Smileys struct {
 }
 type SmileysCount struct {
 	Name  string `json:"name,omitempty"`
-	Id    int    `json:"id,omitempty"`
-	Count int    `json:"count,omitempty"`
+	Id    int    `json:"id"`
+	Count int    `json:"count"`
 }
 
 type SmileysModel struct {
@@ -94,14 +94,21 @@ func (m SmileysModel) InsertUserSmileys(userID string, smiley Smileys) error {
 
 func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*SmileysCount, *int, error) {
 
+	// query := fmt.Sprintf(`
+	// SELECT smiley.name, smiley.id, COUNT(*) AS count,
+	// (SELECT COUNT(*) FROM user_smiley WHERE user_id = $1 AND granted_at >= NOW() - INTERVAL '%d days') AS total_count
+	// FROM smiley
+	// LEFT JOIN user_smiley ON smiley.id = user_smiley.smiley_id
+	// WHERE user_smiley.user_id = $1
+	// AND user_smiley.granted_at >= NOW() - INTERVAL '%d days'
+	// GROUP BY smiley.name, smiley.id; `, interval, interval)
+
 	query := fmt.Sprintf(`
-    SELECT smiley.name, smiley.id, COUNT(*) AS count,
+    SELECT s.name, s.id, COALESCE(COUNT(us.smiley_id), 0) AS count,
     (SELECT COUNT(*) FROM user_smiley WHERE user_id = $1 AND granted_at >= NOW() - INTERVAL '%d days') AS total_count
-    FROM smiley
-    JOIN user_smiley ON smiley.id = user_smiley.smiley_id
-    WHERE user_smiley.user_id = $1
-    AND user_smiley.granted_at >= NOW() - INTERVAL '%d days'
-    GROUP BY smiley.name, smiley.id; `, interval, interval)
+    FROM smiley s
+    LEFT JOIN user_smiley us ON s.id = us.smiley_id AND us.user_id = $1 AND us.granted_at >= NOW() - INTERVAL '%d days'
+    GROUP BY s.name, s.id;`, interval, interval)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
