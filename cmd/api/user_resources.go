@@ -43,9 +43,13 @@ func (app *Application) InsertResources(w http.ResponseWriter, r *http.Request) 
 	}
 
 	err = app.Models.Resources.InsertResources(*resource)
-
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, models.ErrRecordAlreadyExist):
+			app.recordAlreadyExistsResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 	env := envelope{
@@ -110,6 +114,8 @@ func (app *Application) UpdateResources(w http.ResponseWriter, r *http.Request) 
 		switch {
 		case errors.Is(err, models.ErrEditConflict):
 			app.editConflictResponse(w, r)
+		case errors.Is(err, models.ErrRecordAlreadyExist):
+			app.recordAlreadyExistsResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}
@@ -141,7 +147,7 @@ func (app *Application) DeleteResources(w http.ResponseWriter, r *http.Request) 
 		}
 		return
 	}
-	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Resoource successfully deleted"}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Resource successfully deleted"}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS resources (
     name TEXT NOT NULL UNIQUE,
     imageUrl TEXT NOT NULL UNIQUE,
     link TEXT NOT NULL UNIQUE,
-    tags text[] NOT NULL
+    tags text[] NOT NULL,
+    version integer NOT NULL DEFAULT 1 
      );
      
 -- +goose Down

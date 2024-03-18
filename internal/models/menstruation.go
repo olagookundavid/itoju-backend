@@ -9,8 +9,8 @@ import (
 
 type Menses struct {
 	Id         string `json:"-"`
-	Period_len int    `json:"Period_len"`
-	Cycle_len  int    `json:"Cycle_len"`
+	Period_len int    `json:"period_len"`
+	Cycle_len  int    `json:"cycle_len"`
 }
 
 type MensesModels struct {
