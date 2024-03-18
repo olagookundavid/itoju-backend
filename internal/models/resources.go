@@ -10,11 +10,12 @@ import (
 )
 
 type Resources struct {
-	Id       int      `json:"id,omitempty"`
-	Name     string   `json:"name,omitempty"`
-	ImageUrl string   `json:"image_url,omitempty"`
-	Link     string   `json:"link,omitempty"`
-	Tags     []string `json:"tags,omitempty"`
+	Id       int      `json:"id"`
+	Name     string   `json:"name"`
+	ImageUrl string   `json:"image_url"`
+	Link     string   `json:"link"`
+	Tags     []string `json:"tags"`
+	Version  int32    `json:"-"`
 }
 
 type ResourcesModel struct {
@@ -34,7 +35,7 @@ func (m ResourcesModel) GetResources() ([]*Resources, error) {
 	resources := []*Resources{}
 	for rows.Next() {
 		var resource Resources
-		err := rows.Scan(&resource.Id, &resource.Name, &resource.ImageUrl, &resource.Link, pq.Array(&resource.Tags))
+		err := rows.Scan(&resource.Id, &resource.Name, &resource.ImageUrl, &resource.Link, pq.Array(&resource.Tags), &resource.Version)
 		if err != nil {
 			return []*Resources{}, err
 		}
@@ -56,14 +57,23 @@ func (m ResourcesModel) InsertResources(resources Resources) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "resources_name_key"`:
+
+			return ErrRecordAlreadyExist
+		default:
+			return err
+		}
+	}
 	return err
 }
 
 func (m ResourcesModel) UpdateResources(resources *Resources) error {
 
-	query := ` UPDATE resources SET name = $1, imageUrl = $2, link = $3, tags = $4 WHERE id = $5; `
+	query := ` UPDATE resources SET name = $1, imageUrl = $2, link = $3, tags = $4, version = version + 1 WHERE id = $5 AND version = $6; `
 
-	args := []any{resources.Name, resources.ImageUrl, resources.Link, pq.Array(resources.Tags), resources.Id}
+	args := []any{resources.Name, resources.ImageUrl, resources.Link, pq.Array(resources.Tags), resources.Id, resources.Version}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
@@ -91,7 +101,8 @@ func (m ResourcesModel) Get(id int64) (*Resources, error) {
 		&resource.Name,
 		&resource.ImageUrl,
 		&resource.Link,
-		pq.Array(&resource.Tags))
+		pq.Array(&resource.Tags),
+		&resource.Version)
 
 	if err != nil {
 		switch {
