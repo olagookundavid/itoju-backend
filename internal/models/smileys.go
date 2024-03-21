@@ -132,3 +132,22 @@ func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*Smile
 	}
 	return smileys, &totalCount, nil
 }
+
+func (m SmileysModel) GetLatestUserSmileyForToday(userID string) (*Smileys, error) {
+	query := `
+        SELECT smiley_id, tags
+        FROM user_smiley
+        WHERE user_id = $1
+          AND DATE(granted_at) = CURRENT_DATE
+        ORDER BY granted_at DESC
+        LIMIT 1;
+    `
+
+	var userSmiley Smileys
+	err := m.DB.QueryRowContext(context.Background(), query, userID).Scan(&userSmiley.Id, pq.Array(&userSmiley.Tags))
+	if err != nil {
+		return nil, err
+	}
+
+	return &userSmiley, nil
+}
