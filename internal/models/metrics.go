@@ -40,6 +40,7 @@ func (m MetricsModel) SetUserMetrics(selectedMetrics []int, userID string) error
 			}()
 			_, err := m.DB.ExecContext(ctx, query, userID, metricID)
 			if err != nil {
+				logger.PrintError(fmt.Errorf("metric error  %s", err), nil)
 				return
 			}
 		}(metricID)
