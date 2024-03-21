@@ -54,10 +54,8 @@ func (app *Application) InsertUserConditions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	user := app.contextGetUser(r)
-	error := make(chan error)
-	done := make(chan bool)
 
-	err = app.Models.Conditions.SetUserConditions(input.Conditions, user.ID, done, error)
+	err = app.Models.Conditions.SetUserConditions(input.Conditions, user.ID)
 
 	if err != nil {
 		switch {
@@ -71,9 +69,6 @@ func (app *Application) InsertUserConditions(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
-	close(error)
-	close(done)
-
 	env := envelope{
 		"message": "Successfully added User Conditions",
 	}
@@ -96,10 +91,8 @@ func (app *Application) DeleteUserConditions(w http.ResponseWriter, r *http.Requ
 	}
 
 	user := app.contextGetUser(r)
-	error := make(chan error)
-	done := make(chan bool)
 
-	err = app.Models.Conditions.DeleteUserConditions(user.ID, input.Metrics, done, error)
+	err = app.Models.Conditions.DeleteUserConditions(user.ID, input.Metrics)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):
@@ -109,8 +102,6 @@ func (app *Application) DeleteUserConditions(w http.ResponseWriter, r *http.Requ
 		}
 		return
 	}
-	close(error)
-	close(done)
 
 	env := envelope{
 		"message": "Deleted Conditions for User"}

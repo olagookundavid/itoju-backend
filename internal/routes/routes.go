@@ -57,10 +57,10 @@ func Routes(app *api.Application) http.Handler {
 	router.HandlerFunc(http.MethodDelete, "/v1/resources/:id", (app.DeleteResources))
 
 	//Setting
-	router.Handler(http.MethodPost, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.InsertMenses)))
+	// router.Handler(http.MethodPost, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.InsertMenses)))
 	router.Handler(http.MethodGet, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.GetMenses)))
 	router.Handler(http.MethodPut, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.UpdateMenses)))
-	router.Handler(http.MethodPost, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.InsertBodyMeasure)))
+	// router.Handler(http.MethodPost, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.InsertBodyMeasure)))
 	router.Handler(http.MethodGet, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.GetBodyMeasure)))
 	router.Handler(http.MethodPut, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.UpdateBodyMeasure)))
 
