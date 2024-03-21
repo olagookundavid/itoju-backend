@@ -55,6 +55,8 @@ func (app *Application) InsertUserConditions(w http.ResponseWriter, r *http.Requ
 	}
 	user := app.contextGetUser(r)
 
+	print(input.Conditions)
+
 	err = app.Models.Conditions.SetUserConditions(input.Conditions, user.ID)
 
 	if err != nil {
