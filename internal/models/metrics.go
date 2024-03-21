@@ -21,39 +21,30 @@ type MetricsModel struct {
 }
 
 // unique issue on user_metrics table, also how to do this well
-func (m MetricsModel) SetUserMetrics(selectedMetrics []int, userID string, done chan bool, error chan error) error {
-
+func (m MetricsModel) SetUserMetrics(selectedMetrics []int, userID string) error {
+	wg := sync.WaitGroup{}
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 	query := ` INSERT INTO user_trackedmetric (user_id, metric_id) VALUES ($1, $2)`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	for _, metricID := range selectedMetrics {
-
+		wg.Add(1)
 		go func(metricID int) {
-			// Execute the insertion for the current metric.
+			defer wg.Done()
+			defer func() {
+				if err := recover(); err != nil {
+					logger.PrintError(fmt.Errorf("%s", err), nil)
+				}
+			}()
 			_, err := m.DB.ExecContext(ctx, query, userID, metricID)
 			if err != nil {
-				switch {
-				case err.Error() == `pq: duplicate key value violates unique constraint "unique_user_trackedmetric"`:
-					error <- ErrRecordAlreadyExist
-					return
-				default:
-					error <- err
-					return
-				}
+				return
 			}
-			done <- true
 		}(metricID)
 	}
-	for range selectedMetrics {
-		select {
-		case <-done:
-		case err := <-error:
-			return err
-		}
-	}
-
+	wg.Wait()
 	return nil
 
 }
@@ -111,7 +102,7 @@ func (m MetricsModel) GetUserMetrics(userID string) ([]*Metrics, error) {
 	return metrics, nil
 }
 
-func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int, done chan bool, error chan error) error {
+func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int) error {
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
@@ -122,6 +113,7 @@ func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int, do
 	defer cancel()
 
 	for _, metricID := range selectedMetrics {
+
 		wg.Add(1)
 		go func(metricID int) {
 			defer wg.Done()
@@ -130,33 +122,13 @@ func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int, do
 					logger.PrintError(fmt.Errorf("%s", err), nil)
 				}
 			}()
-			result, err := m.DB.ExecContext(ctx, query, userId, metricID)
+			_, err := m.DB.ExecContext(ctx, query, userId, metricID)
 			if err != nil {
-				error <- err
 				return
 			}
-			rowsAffected, err := result.RowsAffected()
-			if err != nil {
-				error <- err
-				return
-			}
-			if rowsAffected == 0 {
-				error <- ErrRecordNotFound
-				return
-			}
-			done <- true
-			wg.Wait()
 		}(metricID)
 	}
 
-	for range selectedMetrics {
-		select {
-		case <-done:
-		case err := <-error:
-			error := err
-			return error
-		}
-	}
-
+	wg.Wait()
 	return nil
 }

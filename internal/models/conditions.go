@@ -73,7 +73,7 @@ func (m ConditionsModel) GetUserConditions(userID string) ([]*Conditions, error)
 	return conditions, nil
 }
 
-func (m ConditionsModel) SetUserConditions(selectedConditions []int, userID string, done chan bool, error chan error) error {
+func (m ConditionsModel) SetUserConditions(selectedConditions []int, userID string) error {
 
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
@@ -95,31 +95,17 @@ func (m ConditionsModel) SetUserConditions(selectedConditions []int, userID stri
 			_, err := m.DB.ExecContext(ctx, query, userID, conditionID)
 
 			if err != nil {
-				switch {
-				case err.Error() == `pq: duplicate key value violates unique constraint "user_conditions_pkey"`:
-					error <- ErrRecordAlreadyExist
-					return
-				default:
-					error <- err
-					return
-				}
+
+				return
 			}
-			done <- true
 		}(conditionID)
 	}
-	for range selectedConditions {
-		select {
-		case <-done:
-		case err := <-error:
-			return err
-		}
-	}
-
+	wg.Wait()
 	return nil
 
 }
 
-func (m ConditionsModel) DeleteUserConditions(userId string, selectedConditions []int, done chan bool, error chan error) error {
+func (m ConditionsModel) DeleteUserConditions(userId string, selectedConditions []int) error {
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
@@ -138,33 +124,12 @@ func (m ConditionsModel) DeleteUserConditions(userId string, selectedConditions 
 					logger.PrintError(fmt.Errorf("%s", err), nil)
 				}
 			}()
-			result, err := m.DB.ExecContext(ctx, query, userId, conditionsID)
+			_, err := m.DB.ExecContext(ctx, query, userId, conditionsID)
 			if err != nil {
-				error <- err
 				return
 			}
-			rowsAffected, err := result.RowsAffected()
-			if err != nil {
-				error <- err
-				return
-			}
-			if rowsAffected == 0 {
-				error <- ErrRecordNotFound
-				return
-			}
-			done <- true
-			wg.Wait()
 		}(symptomsID)
 	}
-
-	for range selectedConditions {
-		select {
-		case <-done:
-		case err := <-error:
-			error := err
-			return error
-		}
-	}
-
+	wg.Wait()
 	return nil
 }

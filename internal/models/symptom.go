@@ -73,7 +73,7 @@ func (m SymptomsModel) GetUserSymptoms(userID string) ([]*Symptoms, error) {
 	return symptoms, nil
 }
 
-func (m SymptomsModel) SetUserSymptoms(selectedSymptoms []int, userID string, done chan bool, error chan error) error {
+func (m SymptomsModel) SetUserSymptoms(selectedSymptoms []int, userID string) error {
 
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
@@ -94,33 +94,17 @@ func (m SymptomsModel) SetUserSymptoms(selectedSymptoms []int, userID string, do
 			}()
 			_, err := m.DB.ExecContext(ctx, query, userID, symID)
 			if err != nil {
-				switch {
-				case err.Error() == `pq: duplicate key value violates unique constraint "user_symptoms_pkey"`:
-					error <- ErrRecordAlreadyExist
-					return
-				default:
-					error <- err
-					return
-				}
-
+				return
 			}
-			done <- true
-			wg.Wait()
 		}(symID)
 	}
-	for range selectedSymptoms {
-		select {
-		case <-done:
-		case err := <-error:
-			return err
-		}
-	}
 
+	wg.Wait()
 	return nil
 
 }
 
-func (m SymptomsModel) DeleteUserSymptoms(userId string, selectedSymptoms []int, done chan bool, error chan error) error {
+func (m SymptomsModel) DeleteUserSymptoms(userId string, selectedSymptoms []int) error {
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
@@ -139,33 +123,13 @@ func (m SymptomsModel) DeleteUserSymptoms(userId string, selectedSymptoms []int,
 					logger.PrintError(fmt.Errorf("%s", err), nil)
 				}
 			}()
-			result, err := m.DB.ExecContext(ctx, query, userId, symptomsID)
+			_, err := m.DB.ExecContext(ctx, query, userId, symptomsID)
 			if err != nil {
-				error <- err
 				return
 			}
-			rowsAffected, err := result.RowsAffected()
-			if err != nil {
-				error <- err
-				return
-			}
-			if rowsAffected == 0 {
-				error <- ErrRecordNotFound
-				return
-			}
-			done <- true
-			wg.Wait()
+
 		}(symptomsID)
 	}
-
-	for range selectedSymptoms {
-		select {
-		case <-done:
-		case err := <-error:
-			error := err
-			return error
-		}
-	}
-
+	wg.Wait()
 	return nil
 }

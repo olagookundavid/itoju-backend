@@ -18,10 +18,8 @@ func (app *Application) SetUserMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := app.contextGetUser(r)
-	error := make(chan error)
-	done := make(chan bool)
 
-	err = app.Models.Metrics.SetUserMetrics(input.Metrics, user.ID, done, error)
+	err = app.Models.Metrics.SetUserMetrics(input.Metrics, user.ID)
 
 	if err != nil {
 		switch {
@@ -35,8 +33,6 @@ func (app *Application) SetUserMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	close(error)
-	close(done)
 
 	env := envelope{
 		"message": "Successfully added track metrics",
@@ -97,10 +93,8 @@ func (app *Application) DeleteUserTrackedMetrics(w http.ResponseWriter, r *http.
 	}
 
 	user := app.contextGetUser(r)
-	error := make(chan error)
-	done := make(chan bool)
 
-	err = app.Models.Metrics.DeleteUserMetrics(user.ID, input.Metrics, done, error)
+	err = app.Models.Metrics.DeleteUserMetrics(user.ID, input.Metrics)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):
@@ -110,8 +104,6 @@ func (app *Application) DeleteUserTrackedMetrics(w http.ResponseWriter, r *http.
 		}
 		return
 	}
-	close(error)
-	close(done)
 
 	env := envelope{
 		"message": "Deleted Tracked Metric for User"}
