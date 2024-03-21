@@ -95,7 +95,6 @@ func (m ConditionsModel) SetUserConditions(selectedConditions []int, userID stri
 			_, err := m.DB.ExecContext(ctx, query, userID, conditionID)
 
 			if err != nil {
-
 				return
 			}
 		}(conditionID)
@@ -126,6 +125,7 @@ func (m ConditionsModel) DeleteUserConditions(userId string, selectedConditions 
 			}()
 			_, err := m.DB.ExecContext(ctx, query, userId, conditionsID)
 			if err != nil {
+				logger.PrintError(fmt.Errorf("condition error  %s", err), nil)
 				return
 			}
 		}(symptomsID)
