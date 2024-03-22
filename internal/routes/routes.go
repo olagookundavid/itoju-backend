@@ -35,6 +35,7 @@ func Routes(app *api.Application) http.Handler {
 	//User smileys
 	router.HandlerFunc(http.MethodGet, "/v1/allsmileys", (app.GetSmileys))
 	router.Handler(http.MethodGet, "/v1/user/smileys", app.RequireActivatedAndAuthedUser((app.GetUserSmileys)))
+	router.Handler(http.MethodGet, "/v1/user/lastestsmileys", app.RequireActivatedAndAuthedUser((app.GetLatestUserSmileyForToday)))
 	router.Handler(http.MethodPost, "/v1/user/smileys", app.RequireActivatedAndAuthedUser((app.InsertUserSmileys)))
 	router.Handler(http.MethodGet, "/v1/user/smileys_count/:id", app.RequireActivatedAndAuthedUser((app.GetUserSmileysCount)))
 

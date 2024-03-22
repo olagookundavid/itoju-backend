@@ -80,12 +80,11 @@ func (m SymptomsModel) SetUserSymptoms(selectedSymptoms []int, userID string) er
 
 	query := ` INSERT INTO user_symptoms (user_id, symptoms_id) VALUES ($1, $2)`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
 	for _, symID := range selectedSymptoms {
 		wg.Add(1)
 		go func(symID int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {
@@ -111,12 +110,12 @@ func (m SymptomsModel) DeleteUserSymptoms(userId string, selectedSymptoms []int)
 	query := ` DELETE FROM user_symptoms
 	WHERE user_id = $1
 	AND symptoms_id = $2; `
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	for _, symptomsID := range selectedSymptoms {
 		wg.Add(1)
 		go func(symptomsID int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {

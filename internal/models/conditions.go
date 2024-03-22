@@ -77,15 +77,16 @@ func (m ConditionsModel) SetUserConditions(selectedConditions []int, userID stri
 
 	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
+	// ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	// defer cancel()
 	query := ` INSERT INTO user_conditions (user_id, conditions_id) VALUES ($1, $2)`
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	for _, conditionID := range selectedConditions {
 		wg.Add(1)
 		go func(conditionID int) {
+
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {
@@ -111,12 +112,14 @@ func (m ConditionsModel) DeleteUserConditions(userId string, selectedConditions 
 	query := ` DELETE FROM user_conditions
 	WHERE user_id = $1
 	AND conditions_id = $2; `
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+	// ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	// defer cancel()
 
 	for _, symptomsID := range selectedConditions {
 		wg.Add(1)
 		go func(conditionsID int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {
