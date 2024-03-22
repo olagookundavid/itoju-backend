@@ -26,12 +26,11 @@ func (m MetricsModel) SetUserMetrics(selectedMetrics []int, userID string) error
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 	query := ` INSERT INTO user_trackedmetric (user_id, metric_id) VALUES ($1, $2)`
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
 	for _, metricID := range selectedMetrics {
 		wg.Add(1)
 		go func(metricID int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {
@@ -110,13 +109,12 @@ func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int) er
 	query := ` DELETE FROM user_trackedmetric
 	WHERE user_id = $1
 	AND metric_id = $2; `
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
 	for _, metricID := range selectedMetrics {
 
 		wg.Add(1)
 		go func(metricID int) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {

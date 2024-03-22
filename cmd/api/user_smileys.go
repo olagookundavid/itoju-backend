@@ -75,6 +75,25 @@ func (app *Application) GetUserSmileys(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *Application) GetLatestUserSmileyForToday(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+
+	smiley, err := app.Models.Smileys.GetLatestUserSmileyForToday(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	env := envelope{
+		"message": "Retrieved All Smileys for User",
+		"smileys": smiley}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 func (app *Application) GetUserSmileysCount(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 	id, err := app.readIDParam(r)

@@ -13,7 +13,7 @@ type Smileys struct {
 	Id   int       `json:"id,omitempty"`
 	Name string    `json:"name,omitempty"`
 	Time time.Time `json:"time,omitempty"`
-	Tags []string  `json:"tags,omitempty"`
+	Tags []string  `json:"tags"`
 }
 type SmileysCount struct {
 	Name  string `json:"name,omitempty"`
@@ -134,20 +134,27 @@ func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*Smile
 }
 
 func (m SmileysModel) GetLatestUserSmileyForToday(userID string) (*Smileys, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 	query := `
-        SELECT smiley_id, tags
-        FROM user_smiley
-        WHERE user_id = $1
-          AND DATE(granted_at) = CURRENT_DATE
-        ORDER BY granted_at DESC
-        LIMIT 1;
-    `
+        SELECT smiley_id, tags FROM user_smiley WHERE user_id = $1
+        AND DATE(granted_at) = CURRENT_DATE ORDER BY granted_at DESC LIMIT 1; `
 
-	var userSmiley Smileys
-	err := m.DB.QueryRowContext(context.Background(), query, userID).Scan(&userSmiley.Id, pq.Array(&userSmiley.Tags))
+	rows, err := m.DB.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	return &userSmiley, nil
+	var userSmiley Smileys
+	if rows.Next() {
+		err := rows.Scan(&userSmiley.Id, pq.Array(&userSmiley.Tags))
+		if err != nil {
+			return nil, err
+		}
+		return &userSmiley, nil
+	}
+
+	// No rows returned
+	return nil, nil
 }
