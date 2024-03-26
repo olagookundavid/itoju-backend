@@ -98,13 +98,14 @@ func openDB(cfg api.Config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(cfg.Db.MaxOpenConns)
-	db.SetMaxIdleConns(cfg.Db.MaxIdleConns)
-	duration, err := time.ParseDuration(cfg.Db.MaxIdleTime)
-	if err != nil {
-		return nil, err
-	}
-	db.SetConnMaxIdleTime(duration)
+	// Setting no default connections
+	// db.SetMaxOpenConns(cfg.Db.MaxOpenConns)
+	// db.SetMaxIdleConns(cfg.Db.MaxIdleConns)
+	// duration, err := time.ParseDuration(cfg.Db.MaxIdleTime)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// db.SetConnMaxIdleTime(duration)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -136,7 +137,7 @@ func cronJob(app *api.Application) {
 	})
 
 	if err != nil {
-		app.Logger.PrintError(err, map[string]string{"error": "An error occured with cron job"})
+		app.Logger.PrintError(err, map[string]string{"error": "An error occured with the cron job"})
 		return
 	}
 
