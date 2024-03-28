@@ -41,9 +41,9 @@ func Routes(app *api.Application) http.Handler {
 
 	//User symptoms
 	router.HandlerFunc(http.MethodGet, "/v1/allsymptoms", (app.GetSymptoms))
-	router.Handler(http.MethodGet, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.GetUserSymptoms)))
-	router.Handler(http.MethodPost, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.InsertUserSymptoms)))
-	router.Handler(http.MethodDelete, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.DeleteUserSymptoms)))
+	// router.Handler(http.MethodGet, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.GetUserSymptoms)))
+	// router.Handler(http.MethodPost, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.InsertUserSymptoms)))
+	// router.Handler(http.MethodDelete, "/v1/user/symptoms", app.RequireActivatedAndAuthedUser((app.DeleteUserSymptoms)))
 
 	//User conditions
 	router.HandlerFunc(http.MethodGet, "/v1/allconditions", (app.GetConditions))
