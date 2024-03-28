@@ -43,8 +43,8 @@ func main() {
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
 	//db
 	flag.StringVar(&cfg.Db.Dsn, "db-dsn", dbUrl, "PostgreSQL DSN")
-	flag.IntVar(&cfg.Db.MaxOpenConns, "db-max-open-conns", 10, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.Db.MaxIdleConns, "db-max-idle-conns", 5, "PostgreSQL max idle connections")
+	flag.IntVar(&cfg.Db.MaxOpenConns, "db-max-open-conns", 15, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.Db.MaxIdleConns, "db-max-idle-conns", 12, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.Db.MaxIdleTime, "db-max-idle-time", "1m", "PostgreSQL max connection idle time")
 	//limiters
 	flag.Float64Var(&cfg.Limiter.Rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
@@ -98,13 +98,14 @@ func openDB(cfg api.Config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(cfg.Db.MaxOpenConns)
-	db.SetMaxIdleConns(cfg.Db.MaxIdleConns)
-	duration, err := time.ParseDuration(cfg.Db.MaxIdleTime)
-	if err != nil {
-		return nil, err
-	}
-	db.SetConnMaxIdleTime(duration)
+	// Setting no default connections
+	// db.SetMaxOpenConns(cfg.Db.MaxOpenConns)
+	// db.SetMaxIdleConns(cfg.Db.MaxIdleConns)
+	// duration, err := time.ParseDuration(cfg.Db.MaxIdleTime)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// db.SetConnMaxIdleTime(duration)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -136,7 +137,7 @@ func cronJob(app *api.Application) {
 	})
 
 	if err != nil {
-		app.Logger.PrintError(err, map[string]string{"error": "An error occured with cron job"})
+		app.Logger.PrintError(err, map[string]string{"error": "An error occured with the cron job"})
 		return
 	}
 

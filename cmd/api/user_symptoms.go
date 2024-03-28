@@ -16,8 +16,8 @@ func (app *Application) GetSymptoms(w http.ResponseWriter, r *http.Request) {
 	}
 
 	env := envelope{
-		"message":    "Retrieved All Symptoms",
-		"conditions": symptoms}
+		"message":  "Retrieved All Symptoms",
+		"symptoms": symptoms}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
@@ -35,8 +35,8 @@ func (app *Application) GetUserSymptoms(w http.ResponseWriter, r *http.Request) 
 	}
 
 	env := envelope{
-		"message":    "Retrieved All Symptoms for User",
-		"conditions": symptoms}
+		"message":  "Retrieved All Symptoms for User",
+		"symptoms": symptoms}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
