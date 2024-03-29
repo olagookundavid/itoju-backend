@@ -65,6 +65,12 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodGet, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.GetBodyMeasure)))
 	router.Handler(http.MethodPut, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.UpdateBodyMeasure)))
 
+	//SymsMetric
+	router.Handler(http.MethodPost, "/v1/user/symsMetric", app.RequireActivatedAndAuthedUser((app.CreateSymsMetric)))
+	router.Handler(http.MethodPut, "/v1/user/symsMetric/:id", app.RequireActivatedAndAuthedUser((app.UpdateSymsMetric)))
+	router.Handler(http.MethodDelete, "/v1/user/symsMetric/:id", app.RequireActivatedAndAuthedUser((app.DeleteSymsMetric)))
+	router.Handler(http.MethodGet, "/v1/user/symsMetric/:date", app.RequireActivatedAndAuthedUser((app.GetUserSymsMetric)))
+
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())
 
