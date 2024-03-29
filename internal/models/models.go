@@ -21,6 +21,7 @@ type Models struct {
 	Resources   ResourcesModel
 	Menses      MensesModels
 	BodyMeasure BodyMeasureModel
+	SymsMetric  SymsMetricModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -34,5 +35,6 @@ func NewModels(db *sql.DB) Models {
 		Resources:   ResourcesModel{DB: db},
 		Menses:      MensesModels{DB: db},
 		BodyMeasure: BodyMeasureModel{DB: db},
+		SymsMetric:  SymsMetricModel{DB: db},
 	}
 }

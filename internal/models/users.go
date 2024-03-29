@@ -80,7 +80,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 	v.Check(user.Dob.String() != "", "Date of birth", "must be provided")
 	v.Check(len(user.FirstName) <= 500, "first_name", "must not be more than 500 bytes long")
 	v.Check(len(user.LastName) <= 500, "last_name", "must not be more than 500 bytes long")
-	v.Check(time.Since(user.Dob) >= 18*365*24*time.Hour, "dob", "must not be older than 18years")
+	v.Check(time.Since(user.Dob) >= 18*365*24*time.Hour, "dob", "must be older than 18years")
 	ValidateEmail(v, user.Email)
 	if user.Password.plaintext != nil {
 		ValidatePasswordPlaintext(v, *user.Password.plaintext)

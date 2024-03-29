@@ -24,6 +24,14 @@ func (app *Application) readIDParam(r *http.Request) (int64, error) {
 	}
 	return id, nil
 }
+func (app *Application) readStringParam(r *http.Request, paramName string) (string, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	value := params.ByName(paramName)
+	if value == "" {
+		return "", fmt.Errorf("missing %s parameter", paramName)
+	}
+	return value, nil
+}
 
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
 	// Encode the data to JSON, returning the error if there was one.

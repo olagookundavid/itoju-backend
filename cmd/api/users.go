@@ -49,11 +49,11 @@ func (app *Application) RegisterUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-	_, err = app.Models.Tokens.New(user.ID, 3*24*time.Hour, models.ScopeActivation)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
+	// _, err = app.Models.Tokens.New(user.ID, 3*24*time.Hour, models.ScopeActivation)
+	// if err != nil {
+	// 	app.serverErrorResponse(w, r, err)
+	// 	return
+	// }
 	// app.background(func() {
 	// 	data := map[string]any{
 	// 		"activationToken": token.Plaintext,
