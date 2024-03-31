@@ -10,16 +10,23 @@ import (
 
 func (app *Application) CreateSymsMetric(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Id int `json:"symsptom_id"`
+		Id   int    `json:"symsptom_id"`
+		Date string `json:"date"`
 	}
+
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	date, err := time.Parse("2006-01-02", input.Date)
+	if err != nil {
+		app.badRequestResponse(w, r, errors.New("invalid date format"))
+		return
+	}
 	user := app.contextGetUser(r)
 	symsMetric := &models.SymsMetric{
-		Id: input.Id,
+		Id: input.Id, Date: date,
 	}
 
 	err = app.Models.SymsMetric.CreateSymsMetric(user.ID, *symsMetric)
@@ -66,6 +73,30 @@ func (app *Application) GetUserSymsMetric(w http.ResponseWriter, r *http.Request
 	env := envelope{
 		"message":    "Retrieved All Symptom Metrics for user",
 		"symsMetric": symsMetric}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetUserTopNSyms(w http.ResponseWriter, r *http.Request) {
+	num, err := app.readIDParam(r)
+	if err != nil {
+		app.NotFoundResponse(w, r)
+		return
+	}
+	user := app.contextGetUser(r)
+
+	syms, err := app.Models.SymsMetric.GetUserTopNSyms(user.ID, int(num))
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	env := envelope{
+		"message":    "Retrieved All Symptom Metrics for user",
+		"symsMetric": syms}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
@@ -150,6 +181,48 @@ func (app *Application) DeleteSymsMetric(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Symptom Metric successfully deleted"}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetDaysTrackedInARow(w http.ResponseWriter, r *http.Request) {
+
+	user := app.contextGetUser(r)
+
+	daysTrackedInARow, err := app.Models.SymsMetric.DaysTrackedInARow(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	env := envelope{
+		"message":           "Retrieved days tracked in a row",
+		"daysTrackedInARow": daysTrackedInARow,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetDaysTrackedFree(w http.ResponseWriter, r *http.Request) {
+
+	user := app.contextGetUser(r)
+
+	daysTrackedFree, err := app.Models.SymsMetric.DaysTrackedFree(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	env := envelope{
+		"message":         "Retrieved days tracked in a row",
+		"daysTrackedFree": daysTrackedFree,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

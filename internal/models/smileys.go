@@ -94,15 +94,6 @@ func (m SmileysModel) InsertUserSmileys(userID string, smiley Smileys) error {
 
 func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*SmileysCount, *int, error) {
 
-	// query := fmt.Sprintf(`
-	// SELECT smiley.name, smiley.id, COUNT(*) AS count,
-	// (SELECT COUNT(*) FROM user_smiley WHERE user_id = $1 AND granted_at >= NOW() - INTERVAL '%d days') AS total_count
-	// FROM smiley
-	// LEFT JOIN user_smiley ON smiley.id = user_smiley.smiley_id
-	// WHERE user_smiley.user_id = $1
-	// AND user_smiley.granted_at >= NOW() - INTERVAL '%d days'
-	// GROUP BY smiley.name, smiley.id; `, interval, interval)
-
 	query := fmt.Sprintf(`
     SELECT s.name, s.id, COALESCE(COUNT(us.smiley_id), 0) AS count,
     (SELECT COUNT(*) FROM user_smiley WHERE user_id = $1 AND granted_at >= NOW() - INTERVAL '%d days') AS total_count
