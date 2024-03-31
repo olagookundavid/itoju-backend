@@ -83,7 +83,7 @@ func (m SymsMetricModel) GetUserTopNSyms(userId string, interval int) ([]*SymTop
 		`
 	SELECT s.name, usm.symptoms_id, COUNT(*) AS count
 	FROM user_symptoms_metric usm
-	JOIN symptoms s ON usm.id = s.id
+	JOIN symptoms s ON usm.symptoms_id = s.id
 	WHERE usm.user_id = $1
 	AND usm.date >= CURRENT_DATE - INTERVAL '%d days'
 	GROUP BY s.name, usm.symptoms_id
