@@ -70,6 +70,11 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodPut, "/v1/user/symsMetric/:id", app.RequireActivatedAndAuthedUser((app.UpdateSymsMetric)))
 	router.Handler(http.MethodDelete, "/v1/user/symsMetric/:id", app.RequireActivatedAndAuthedUser((app.DeleteSymsMetric)))
 	router.Handler(http.MethodGet, "/v1/user/symsMetric/:date", app.RequireActivatedAndAuthedUser((app.GetUserSymsMetric)))
+	router.Handler(http.MethodGet, "/v1/user/symsN/:id", app.RequireActivatedAndAuthedUser((app.GetUserTopNSyms)))
+
+	//Achievement
+	router.Handler(http.MethodGet, "/v1/user/getDaysTracked", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedInARow)))
+	router.Handler(http.MethodGet, "/v1/user/getDaysTrackedFree", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedFree)))
 
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())
