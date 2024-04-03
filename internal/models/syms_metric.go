@@ -37,7 +37,7 @@ func (m SymsMetricModel) CreateSymsMetric(userId string, symsMetric SymsMetric) 
 	_, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "unique_user_symptom_date_us"`:
+		case err.Error() == `pq: duplicate key value violates unique constraint "unique_user_symptom_date"`:
 
 			return ErrRecordAlreadyExist
 		default:
