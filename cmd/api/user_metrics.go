@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/olagookundavid/itoju/internal/models"
 )
@@ -107,6 +108,40 @@ func (app *Application) DeleteUserTrackedMetrics(w http.ResponseWriter, r *http.
 
 	env := envelope{
 		"message": "Deleted Tracked Metric for User"}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.Request) {
+
+	dateString, err := app.readStringParam(r, "date")
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		app.badRequestResponse(w, r, errors.New("invalid date format"))
+		return
+	}
+
+	user := app.contextGetUser(r)
+	symsBoolResult := make(chan bool)
+
+	go func() {
+		symsBool := app.Models.SymsMetric.CheckUserEntry(user.ID, date)
+		symsBoolResult <- symsBool
+	}()
+	symsBool := <-symsBoolResult
+
+	resultMap := make(map[string]bool)
+	resultMap["Symptoms"] = symsBool
+	env := envelope{
+		"message": "retrieved Tracked Metric Status for User", "Metrics Status": resultMap}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 
