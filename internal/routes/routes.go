@@ -31,6 +31,7 @@ func Routes(app *api.Application) http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/allmetrics", (app.GetTrackedMetrics))
 	router.Handler(http.MethodGet, "/v1/user/metrics", app.RequireActivatedAndAuthedUser((app.GetUserTrackedMetrics)))
 	router.Handler(http.MethodDelete, "/v1/user/metrics", app.RequireActivatedAndAuthedUser((app.DeleteUserTrackedMetrics)))
+	router.Handler(http.MethodGet, "/v1/user/metrics_status/:date", app.RequireActivatedAndAuthedUser((app.GetTrackedMetricsStatus)))
 
 	//User smileys
 	router.HandlerFunc(http.MethodGet, "/v1/allsmileys", (app.GetSmileys))

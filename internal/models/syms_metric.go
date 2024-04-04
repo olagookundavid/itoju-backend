@@ -237,3 +237,20 @@ func (m SymsMetricModel) DaysTrackedFree(userID string) (*int, error) {
 	}
 	return &maxConsecutiveDays, err
 }
+
+func (m SymsMetricModel) CheckUserEntry(userID string, date time.Time) bool {
+
+	query := `
+	SELECT COUNT(*) AS entry_count
+	FROM user_symptoms_metric usm
+	WHERE usm.user_id = $1 AND usm.date = $2
+`
+	var entryCount int
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, userID, date).Scan(&entryCount)
+	if err != nil {
+		return false
+	}
+	return entryCount > 0
+}
