@@ -141,7 +141,7 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	resultMap := make(map[string]bool)
 	resultMap["symptoms"] = symsBool
 	env := envelope{
-		"message": "retrieved Tracked Metric Status for User", "Metrics Status": resultMap}
+		"message": "retrieved Tracked Metric Status for User", "metrics_status": resultMap}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 
