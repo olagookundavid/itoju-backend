@@ -81,10 +81,10 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):
 			var input struct {
-				TimeSlept  time.Time `json:"time_slept"`
-				TimeWokeUp time.Time `json:"time_woke_up"`
-				Severity   float64   `json:"severity"`
-				Tags       []string  `json:"tags"`
+				TimeSlept  string   `json:"time_slept"`
+				TimeWokeUp string   `json:"time_woke_up"`
+				Severity   float64  `json:"severity"`
+				Tags       []string `json:"tags"`
 			}
 			err := app.readJSON(w, r, &input)
 			if err != nil {
@@ -115,10 +115,10 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 	}
 
 	var input struct {
-		TimeSlept  *time.Time `json:"time_slept"`
-		TimeWokeUp *time.Time `json:"time_woke_up"`
-		Severity   *float64   `json:"severity"`
-		Tags       *[]string  `json:"tags"`
+		TimeSlept  *string   `json:"time_slept"`
+		TimeWokeUp *string   `json:"time_woke_up"`
+		Severity   *float64  `json:"severity"`
+		Tags       *[]string `json:"tags"`
 	}
 	err = app.readJSON(w, r, &input)
 	if err != nil {
