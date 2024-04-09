@@ -76,6 +76,7 @@ func Routes(app *api.Application) http.Handler {
 	//SleepMetrics
 	router.Handler(http.MethodGet, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserSleepMetrics)))
 	router.Handler(http.MethodPut, "/v1/user/sleep_metrics/:date/:is_night", app.RequireActivatedAndAuthedUser((app.UpdateSleepMetric)))
+
 	//Achievement
 	router.Handler(http.MethodGet, "/v1/user/getDaysTracked", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedInARow)))
 	router.Handler(http.MethodGet, "/v1/user/getDaysTrackedFree", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedFree)))
