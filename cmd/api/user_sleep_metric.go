@@ -81,7 +81,6 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):
 			var input struct {
-				IsNight    bool      `json:"is_night"`
 				TimeSlept  time.Time `json:"time_slept"`
 				TimeWokeUp time.Time `json:"time_woke_up"`
 				Severity   float64   `json:"severity"`
@@ -93,7 +92,7 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 				return
 			}
 			sleepMetric := &models.SleepMetric{
-				IsNight: input.IsNight, TimeSlept: input.TimeSlept, TimeWokeUp: input.TimeWokeUp, Tags: input.Tags, Date: date, Severity: input.Severity}
+				IsNight: isNight, TimeSlept: input.TimeSlept, TimeWokeUp: input.TimeWokeUp, Tags: input.Tags, Date: date, Severity: input.Severity}
 
 			err = app.Models.SleepMetric.InsertSleepMetric(user.ID, sleepMetric)
 
@@ -103,7 +102,6 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 			}
 			env := envelope{
 				"message": "Successfully updated User Sleep Metrics!",
-				"data":    sleepMetric,
 			}
 
 			err = app.writeJSON(w, http.StatusOK, env, nil)
@@ -118,7 +116,7 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 
 	var input struct {
 		TimeSlept  *time.Time `json:"time_slept"`
-		TimeWokeUp *time.Time `json:"time_woke_uo"`
+		TimeWokeUp *time.Time `json:"time_woke_up"`
 		Severity   *float64   `json:"severity"`
 		Tags       *[]string  `json:"tags"`
 	}
@@ -153,7 +151,6 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 	}
 	env := envelope{
 		"message": "Successfully updated User Sleep Metrics",
-		"data":    sleepMetric,
 	}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {

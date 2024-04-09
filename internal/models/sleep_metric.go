@@ -63,7 +63,7 @@ func (m SleepMetricModel) UpdateSleepMetric(sleepMetric *SleepMetric) error {
 
 	query := ` UPDATE user_sleep_metric SET time_slept = $1, time_woke_up = $2, tags = $3, severity = $4 WHERE id = $5 AND is_night = $6; `
 
-	args := []any{sleepMetric.TimeSlept, sleepMetric.TimeWokeUp, sleepMetric.Tags, sleepMetric.Severity, sleepMetric.ID, sleepMetric.IsNight}
+	args := []any{sleepMetric.TimeSlept, sleepMetric.TimeWokeUp, pq.Array(sleepMetric.Tags), sleepMetric.Severity, sleepMetric.ID, sleepMetric.IsNight}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
