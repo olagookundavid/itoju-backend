@@ -24,6 +24,7 @@ func (app *Application) readIDParam(r *http.Request) (int64, error) {
 	}
 	return id, nil
 }
+
 func (app *Application) readStringParam(r *http.Request, paramName string) (string, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 	value := params.ByName(paramName)
@@ -33,6 +34,18 @@ func (app *Application) readStringParam(r *http.Request, paramName string) (stri
 	return value, nil
 }
 
+func (app *Application) readBoolParam(r *http.Request, paramName string) (bool, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	value := params.ByName(paramName)
+	if value == "" {
+		return false, fmt.Errorf("missing %s parameter", paramName)
+	}
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, fmt.Errorf("invalid boolean value for %s parameter", paramName)
+	}
+	return boolValue, nil
+}
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
 	// Encode the data to JSON, returning the error if there was one.
 	js, err := json.Marshal(data)

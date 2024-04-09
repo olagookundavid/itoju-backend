@@ -51,7 +51,10 @@ func (m MensesModels) InsertMenses(menses *Menses) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m MensesModels) UpdateMenses(menses *Menses) error {
