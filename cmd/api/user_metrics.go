@@ -131,16 +131,23 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 
 	user := app.contextGetUser(r)
 	symsBoolResult := make(chan bool)
-
+	sleepBoolResult := make(chan bool)
 	go func() {
 		symsBool := app.Models.SymsMetric.CheckUserEntry(user.ID, date)
 		symsBoolResult <- symsBool
 	}()
+	go func() {
+		sleepBool := app.Models.SleepMetric.CheckUserEntry(user.ID, date)
+		sleepBoolResult <- sleepBool
+	}()
 	symsBool := <-symsBoolResult
+	sleepBool := <-sleepBoolResult
 
 	close(symsBoolResult)
+	close(sleepBoolResult)
 	resultMap := make(map[string]bool)
 	resultMap["symptoms"] = symsBool
+	resultMap["sleep"] = sleepBool
 	env := envelope{
 		"message": "retrieved Tracked Metric Status for User", "metrics_status": resultMap}
 
