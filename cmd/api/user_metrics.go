@@ -138,6 +138,7 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	}()
 	symsBool := <-symsBoolResult
 
+	close(symsBoolResult)
 	resultMap := make(map[string]bool)
 	resultMap["symptoms"] = symsBool
 	env := envelope{
