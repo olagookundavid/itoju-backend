@@ -132,14 +132,10 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	user := app.contextGetUser(r)
 	symsBoolResult := make(chan bool)
 	sleepBoolResult := make(chan bool)
-	go func() {
-		symsBool := app.Models.SymsMetric.CheckUserEntry(user.ID, date)
-		symsBoolResult <- symsBool
-	}()
-	go func() {
-		sleepBool := app.Models.SleepMetric.CheckUserEntry(user.ID, date)
-		sleepBoolResult <- sleepBool
-	}()
+	go app.Models.SymsMetric.CheckUserEntry(user.ID, date, symsBoolResult)
+
+	go app.Models.SleepMetric.CheckUserEntry(user.ID, date, sleepBoolResult)
+
 	symsBool := <-symsBoolResult
 	sleepBool := <-sleepBoolResult
 

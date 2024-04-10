@@ -93,7 +93,7 @@ func (m SleepMetricModel) UpdateSleepMetric(sleepMetric *SleepMetric) error {
 	return nil
 }
 
-func (m SleepMetricModel) CheckUserEntry(userID string, date time.Time) bool {
+func (m SleepMetricModel) CheckUserEntry(userID string, date time.Time, sendbool chan<- bool) {
 
 	query := `
 	SELECT COUNT(*) AS entry_count
@@ -105,7 +105,7 @@ func (m SleepMetricModel) CheckUserEntry(userID string, date time.Time) bool {
 	defer cancel()
 	err := m.DB.QueryRowContext(ctx, query, userID, date).Scan(&entryCount)
 	if err != nil {
-		return false
+		sendbool <- false
 	}
-	return entryCount > 0
+	sendbool <- (entryCount > 0)
 }
