@@ -80,12 +80,12 @@ func (m SmileysModel) GetUserSmileys(userID string) ([]*Smileys, error) {
 	return smileys, nil
 }
 
-func (m SmileysModel) InsertUserSmileys(userID string, smiley Smileys) error {
+func (m SmileysModel) InsertUserSmileys(userID string, smiley Smileys, date time.Time) error {
 	query := `
 	INSERT INTO user_smiley (user_id, smiley_id, granted_at, tags)
 	VALUES ($1, $2, $3, $4) `
 
-	args := []any{userID, smiley.Id, time.Now(), pq.Array(smiley.Tags)}
+	args := []any{userID, smiley.Id, date, pq.Array(smiley.Tags)}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
