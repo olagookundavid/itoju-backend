@@ -50,7 +50,12 @@ func (app *Application) InsertUserSmileys(w http.ResponseWriter, r *http.Request
 	err = app.Models.Smileys.InsertUserSmileys(user.ID, *smiley, date)
 
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, models.ErrRecordAlreadyExist):
+			app.recordAlreadyExistsResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 	env := envelope{

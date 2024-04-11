@@ -89,6 +89,15 @@ func (m SmileysModel) InsertUserSmileys(userID string, smiley Smileys, date time
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "user_smiley_pkey"`:
+
+			return ErrRecordAlreadyExist
+		default:
+			return err
+		}
+	}
 	return err
 }
 
