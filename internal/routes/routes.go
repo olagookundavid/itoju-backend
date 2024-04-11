@@ -36,9 +36,9 @@ func Routes(app *api.Application) http.Handler {
 	//User smileys
 	router.HandlerFunc(http.MethodGet, "/v1/allsmileys", (app.GetSmileys))
 	router.Handler(http.MethodGet, "/v1/user/smileys", app.RequireActivatedAndAuthedUser((app.GetUserSmileys)))
-	router.Handler(http.MethodGet, "/v1/user/lastestsmileys", app.RequireActivatedAndAuthedUser((app.GetLatestUserSmileyForToday)))
+	router.Handler(http.MethodGet, "/v1/user/lastestsmileys/:date", app.RequireActivatedAndAuthedUser((app.GetLatestUserSmileyForToday)))
 	router.Handler(http.MethodPost, "/v1/user/smileys", app.RequireActivatedAndAuthedUser((app.InsertUserSmileys)))
-	router.Handler(http.MethodGet, "/v1/user/smileys_count/:id", app.RequireActivatedAndAuthedUser((app.GetUserSmileysCount)))
+	router.Handler(http.MethodGet, "/v1/user/smileys_count/:id", app.RequireActivatedAndAuthedUser((app.GetUserSmileysCountInXDays)))
 
 	//User symptoms
 	router.HandlerFunc(http.MethodGet, "/v1/allsymptoms", (app.GetSymptoms))
@@ -59,10 +59,8 @@ func Routes(app *api.Application) http.Handler {
 	router.HandlerFunc(http.MethodDelete, "/v1/resources/:id", (app.DeleteResources))
 
 	//Setting
-	// router.Handler(http.MethodPost, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.InsertMenses)))
 	router.Handler(http.MethodGet, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.GetMenses)))
 	router.Handler(http.MethodPut, "/v1/user/menses", app.RequireActivatedAndAuthedUser((app.UpdateMenses)))
-	// router.Handler(http.MethodPost, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.InsertBodyMeasure)))
 	router.Handler(http.MethodGet, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.GetBodyMeasure)))
 	router.Handler(http.MethodPut, "/v1/user/bodymeasure", app.RequireActivatedAndAuthedUser((app.UpdateBodyMeasure)))
 

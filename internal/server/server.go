@@ -27,22 +27,24 @@ func Serve(app *api.Application) error {
 		WriteTimeout: 30 * time.Second,
 	}
 	shutdownError := make(chan error)
-	go func() {
-		// Intercept the signals, as before.
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		s := <-quit
-		app.Logger.PrintInfo("shutting down server", map[string]string{"signal": s.String()})
-		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-		defer cancel()
-		err := srv.Shutdown(ctx)
-		if err != nil {
-			shutdownError <- err
-		}
-		app.Logger.PrintInfo("completing background tasks", map[string]string{"addr": srv.Addr})
-		app.Wg.Wait()
-		shutdownError <- nil
-	}()
+
+	app.Background(
+		func() {
+			// Intercept the signals, as before.
+			quit := make(chan os.Signal, 1)
+			signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+			s := <-quit
+			app.Logger.PrintInfo("shutting down server", map[string]string{"signal": s.String()})
+			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer cancel()
+			err := srv.Shutdown(ctx)
+			if err != nil {
+				shutdownError <- err
+			}
+			app.Logger.PrintInfo("completing background tasks", map[string]string{"addr": srv.Addr})
+
+			shutdownError <- nil
+		})
 
 	logger.PrintInfo("starting server", map[string]string{"addr": srv.Addr, "env": app.Config.Env})
 	err := srv.ListenAndServe()

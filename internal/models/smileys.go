@@ -124,14 +124,17 @@ func (m SmileysModel) GetUserSmileysCount(userID string, interval int) ([]*Smile
 	return smileys, &totalCount, nil
 }
 
-func (m SmileysModel) GetLatestUserSmileyForToday(userID string) (*Smileys, error) {
+func (m SmileysModel) GetLatestUserSmileyForToday(userID string, date time.Time) (*Smileys, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
-        SELECT smiley_id, tags FROM user_smiley WHERE user_id = $1
-        AND DATE(granted_at) = CURRENT_DATE ORDER BY granted_at DESC LIMIT 1; `
+	SELECT smiley_id, tags 
+	FROM user_smiley 
+	WHERE user_id = $1 AND DATE(granted_at) = $2 
+	ORDER BY granted_at DESC 
+	LIMIT 1;`
 
-	rows, err := m.DB.QueryContext(ctx, query, userID)
+	rows, err := m.DB.QueryContext(ctx, query, userID, date)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +148,5 @@ func (m SmileysModel) GetLatestUserSmileyForToday(userID string) (*Smileys, erro
 		}
 		return &userSmiley, nil
 	}
-
-	// No rows returned
 	return nil, nil
 }

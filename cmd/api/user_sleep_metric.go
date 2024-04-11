@@ -27,9 +27,12 @@ func (app *Application) GetUserSleepMetrics(w http.ResponseWriter, r *http.Reque
 	nightErrChan := make(chan error)
 	var daySleepMetric, nightSleepMetric *models.SleepMetric
 
-	// Start goroutines to fetch metrics asynchronously
-	go app.getUserSleepMetricAsync(user.ID, date, dayMetricChan, dayErrChan, false)
-	go app.getUserSleepMetricAsync(user.ID, date, nightMetricChan, nightErrChan, true)
+	app.Background(func() {
+		app.getUserSleepMetricAsync(user.ID, date, dayMetricChan, dayErrChan, false)
+	})
+	app.Background(func() {
+		app.getUserSleepMetricAsync(user.ID, date, nightMetricChan, nightErrChan, true)
+	})
 
 	for i := 0; i < 2; i++ {
 		select {
@@ -166,58 +169,3 @@ func (app *Application) getUserSleepMetricAsync(userID string, date time.Time, s
 	}
 	sendMetric <- metric
 }
-
-/*
-
-	nightSleepResult := make(chan *models.SleepMetric)
-	daySleepResult := make(chan *models.SleepMetric)
-	errChan := make(chan error)
-
-	go func() {
-		nightSleepMetric, err := app.Models.SleepMetric.GetUserSleepMetric(user.ID, date, true)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		nightSleepResult <- nightSleepMetric
-	}()
-
-	go func() {
-		daySleepMetric, err := app.Models.SleepMetric.GetUserSleepMetric(user.ID, date, false)
-		if err != nil {
-			errChan <- err
-			return
-		}
-		daySleepResult <- daySleepMetric
-	}()
-
-	var nightSleepMetric *models.SleepMetric
-	var daySleepMetric *models.SleepMetric
-	var resultError error
-
-	select {
-	case nightSleepMetric = <-nightSleepResult:
-	case daySleepMetric = <-daySleepResult:
-	case resultError = <-errChan:
-	}
-
-	close(nightSleepResult)
-	close(daySleepResult)
-	close(errChan)
-
-	if resultError != nil {
-		app.serverErrorResponse(w, r, resultError)
-		return
-	}
-
-	env := envelope{
-		"message":          "Retrieved All Sleep Metrics for user",
-		"nightSleepMetric": nightSleepMetric,
-		"daySleepMetric":   daySleepMetric,
-	}
-
-	err = app.writeJSON(w, http.StatusOK, env, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-*/

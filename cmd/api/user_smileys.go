@@ -1,8 +1,10 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/olagookundavid/itoju/internal/models"
 )
@@ -77,8 +79,17 @@ func (app *Application) GetUserSmileys(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) GetLatestUserSmileyForToday(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-
-	smiley, err := app.Models.Smileys.GetLatestUserSmileyForToday(user.ID)
+	dateString, err := app.readStringParam(r, "date")
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		app.badRequestResponse(w, r, errors.New("invalid date format"))
+		return
+	}
+	smiley, err := app.Models.Smileys.GetLatestUserSmileyForToday(user.ID, date)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -94,7 +105,7 @@ func (app *Application) GetLatestUserSmileyForToday(w http.ResponseWriter, r *ht
 	}
 }
 
-func (app *Application) GetUserSmileysCount(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetUserSmileysCountInXDays(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 	id, err := app.readIDParam(r)
 	if err != nil {
