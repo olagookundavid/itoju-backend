@@ -31,6 +31,7 @@ func (app *Application) InsertUserSmileys(w http.ResponseWriter, r *http.Request
 	var input struct {
 		SmileyID int      `json:"smiley_id"`
 		Tags     []string `json:"tags"`
+		Date     string   `json:"date"`
 	}
 	err := app.readJSON(w, r, &input)
 	if err != nil {
@@ -41,7 +42,12 @@ func (app *Application) InsertUserSmileys(w http.ResponseWriter, r *http.Request
 		Id: input.SmileyID, Tags: input.Tags,
 	}
 	user := app.contextGetUser(r)
-	err = app.Models.Smileys.InsertUserSmileys(user.ID, *smiley)
+	date, err := time.Parse("2006-01-02 15:04:05", input.Date)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	err = app.Models.Smileys.InsertUserSmileys(user.ID, *smiley, date)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
