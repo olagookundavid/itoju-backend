@@ -45,18 +45,6 @@ func (m SleepMetricModel) GetUserSleepMetric(userId string, date time.Time, isNi
 }
 
 func (m SleepMetricModel) InsertSleepMetric(userID string, sleepMetric *SleepMetric) error {
-	uery := `
-	CREATE TABLE user_sleep_metric (
-		id SERIAL PRIMARY KEY,
-		user_id UUID NOT NULL REFERENCES users ON DELETE CASCADE,
-		is_night BOOLEAN NOT NULL,
-		time_slept VARCHAR(20) NOT NULL,
-		time_woke_up VARCHAR(20) NOT NULL, 
-		tags TEXT[] NOT NULL,
-		date DATE NOT NULL DEFAULT CURRENT_DATE,
-		severity NUMERIC(3,2) DEFAULT 0 CHECK (severity >= 0 AND severity <= 1),
-		CONSTRAINT unique_user_sleep_date UNIQUE (user_id, is_night, date)
-	); `
 
 	query := `
 	INSERT INTO user_sleep_metric (user_id, is_night, time_slept, time_woke_up, date, severity, tags)
@@ -65,8 +53,6 @@ func (m SleepMetricModel) InsertSleepMetric(userID string, sleepMetric *SleepMet
 	args := []any{userID, sleepMetric.IsNight, sleepMetric.TimeSlept, sleepMetric.TimeWokeUp, sleepMetric.Date, sleepMetric.Severity, pq.Array(sleepMetric.Tags)}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-
-	_, _ = m.DB.ExecContext(ctx, uery)
 	_, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
