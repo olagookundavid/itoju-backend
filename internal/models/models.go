@@ -23,6 +23,7 @@ type Models struct {
 	BodyMeasure BodyMeasureModel
 	SymsMetric  SymsMetricModel
 	SleepMetric SleepMetricModel
+	FoodMetric  FoodMetricModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -38,5 +39,6 @@ func NewModels(db *sql.DB) Models {
 		BodyMeasure: BodyMeasureModel{DB: db},
 		SymsMetric:  SymsMetricModel{DB: db},
 		SleepMetric: SleepMetricModel{DB: db},
+		FoodMetric:  FoodMetricModel{DB: db},
 	}
 }
