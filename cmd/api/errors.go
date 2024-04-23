@@ -6,6 +6,7 @@ import (
 )
 
 func (app *Application) logError(r *http.Request, err error) {
+	print("error 500")
 	app.Logger.PrintError(err, map[string]string{
 		"request_method": r.Method,
 		"request_url":    r.URL.String()})
