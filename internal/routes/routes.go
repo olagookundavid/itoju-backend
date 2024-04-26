@@ -79,6 +79,11 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodGet, "/v1/user/food_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserFoodMetrics)))
 	router.Handler(http.MethodPut, "/v1/user/food_metrics/:date", app.RequireActivatedAndAuthedUser((app.UpdateUserFoodMetrics)))
 
+	//ExerciseMetrics
+	router.Handler(http.MethodGet, "/v1/user/exercise_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserExerciseMetrics)))
+	router.Handler(http.MethodPost, "/v1/user/exercise_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateExerciseMetric)))
+	router.Handler(http.MethodPut, "/v1/user/exercise_metrics/:id", app.RequireActivatedAndAuthedUser((app.UpdateExerciseMetric)))
+
 	//Achievement
 	router.Handler(http.MethodGet, "/v1/user/getDaysTracked", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedInARow)))
 	router.Handler(http.MethodGet, "/v1/user/getDaysTrackedFree", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedFree)))

@@ -12,33 +12,35 @@ var (
 )
 
 type Models struct {
-	Users       UserModel
-	Tokens      TokenModel
-	Metrics     MetricsModel
-	Smileys     SmileysModel
-	Symptoms    SymptomsModel
-	Conditions  ConditionsModel
-	Resources   ResourcesModel
-	Menses      MensesModels
-	BodyMeasure BodyMeasureModel
-	SymsMetric  SymsMetricModel
-	SleepMetric SleepMetricModel
-	FoodMetric  FoodMetricModel
+	Users          UserModel
+	Tokens         TokenModel
+	Metrics        MetricsModel
+	Smileys        SmileysModel
+	Symptoms       SymptomsModel
+	Conditions     ConditionsModel
+	Resources      ResourcesModel
+	Menses         MensesModels
+	BodyMeasure    BodyMeasureModel
+	SymsMetric     SymsMetricModel
+	SleepMetric    SleepMetricModel
+	FoodMetric     FoodMetricModel
+	ExerciseMetric ExerciseMetricModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Users:       UserModel{DB: db},
-		Tokens:      TokenModel{DB: db},
-		Metrics:     MetricsModel{DB: db},
-		Smileys:     SmileysModel{DB: db},
-		Symptoms:    SymptomsModel{DB: db},
-		Conditions:  ConditionsModel{DB: db},
-		Resources:   ResourcesModel{DB: db},
-		Menses:      MensesModels{DB: db},
-		BodyMeasure: BodyMeasureModel{DB: db},
-		SymsMetric:  SymsMetricModel{DB: db},
-		SleepMetric: SleepMetricModel{DB: db},
-		FoodMetric:  FoodMetricModel{DB: db},
+		Users:          UserModel{DB: db},
+		Tokens:         TokenModel{DB: db},
+		Metrics:        MetricsModel{DB: db},
+		Smileys:        SmileysModel{DB: db},
+		Symptoms:       SymptomsModel{DB: db},
+		Conditions:     ConditionsModel{DB: db},
+		Resources:      ResourcesModel{DB: db},
+		Menses:         MensesModels{DB: db},
+		BodyMeasure:    BodyMeasureModel{DB: db},
+		SymsMetric:     SymsMetricModel{DB: db},
+		SleepMetric:    SleepMetricModel{DB: db},
+		FoodMetric:     FoodMetricModel{DB: db},
+		ExerciseMetric: ExerciseMetricModel{DB: db},
 	}
 }
