@@ -52,11 +52,11 @@ func (app *Application) InsertUserSmileys(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrRecordAlreadyExist):
-			app.recordAlreadyExistsResponse(w, r)
+			// app.recordAlreadyExistsResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
+			return
 		}
-		return
 	}
 	env := envelope{
 		"message": "Successfully added User smiley",

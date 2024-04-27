@@ -133,10 +133,12 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	symsBoolResult := make(chan bool)
 	sleepBoolResult := make(chan bool)
 	foodBoolResult := make(chan bool)
+	exerciseBoolResult := make(chan bool)
 
 	defer close(symsBoolResult)
 	defer close(sleepBoolResult)
 	defer close(foodBoolResult)
+	defer close(exerciseBoolResult)
 
 	app.Background(func() {
 		app.Models.SymsMetric.CheckUserEntry(user.ID, date, symsBoolResult)
@@ -147,14 +149,19 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	app.Background(func() {
 		app.Models.FoodMetric.CheckUserEntry(user.ID, date, foodBoolResult)
 	})
+	app.Background(func() {
+		app.Models.ExerciseMetric.CheckUserEntry(user.ID, date, exerciseBoolResult)
+	})
 	symsBool := <-symsBoolResult
 	sleepBool := <-sleepBoolResult
 	foodBool := <-foodBoolResult
+	exerciseBool := <-exerciseBoolResult
 
 	resultMap := make(map[string]bool)
 	resultMap["symptoms"] = symsBool
 	resultMap["sleep"] = sleepBool
 	resultMap["food"] = foodBool
+	resultMap["exercise"] = exerciseBool
 
 	env := envelope{
 		"message": "retrieved Tracked Metric Status for User", "metrics_status": resultMap}
