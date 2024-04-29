@@ -131,6 +131,7 @@ func (m ExerciseMetricModel) CheckUserEntry(userID string, date time.Time, sendb
 	err := m.DB.QueryRowContext(ctx, query, userID, date).Scan(&entryCount)
 	if err != nil {
 		sendbool <- false
+		return
 	}
 	sendbool <- (entryCount > 0)
 }
