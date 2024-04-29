@@ -141,30 +141,19 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	defer close(sleepBoolResult)
 	defer close(foodBoolResult)
 
-	// var wg sync.WaitGroup
-
-	// Increment the wait group counter for each goroutine
-	// wg.Add(4)
-
 	app.Background(func() {
-		// defer wg.Done()
 		app.Models.SymsMetric.CheckUserEntry(user.ID, date, symsBoolResult)
 	})
 	app.Background(func() {
-		// defer wg.Done()
 		app.Models.SleepMetric.CheckUserEntry(user.ID, date, sleepBoolResult)
 	})
 	app.Background(func() {
-		// defer wg.Done()
 		app.Models.FoodMetric.CheckUserEntry(user.ID, date, foodBoolResult)
 	})
 	app.Background(func() {
-		// defer wg.Done()
 		app.Models.ExerciseMetric.CheckUserEntry(user.ID, date, exerciseBoolResult)
 	})
 
-	// Wait for all goroutines to finish
-	// wg.Wait()
 	symsBool := <-symsBoolResult
 	sleepBool := <-sleepBoolResult
 	foodBool := <-foodBoolResult
