@@ -163,6 +163,8 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 		app.Models.ExerciseMetric.CheckUserEntry(user.ID, date, exerciseBoolResult)
 	})
 
+	// Wait for all goroutines to finish
+	// wg.Wait()
 	symsBool := <-symsBoolResult
 	sleepBool := <-sleepBoolResult
 	foodBool := <-foodBoolResult
