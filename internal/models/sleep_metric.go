@@ -91,7 +91,10 @@ func (m SleepMetricModel) CheckUserEntry(userID string, date time.Time, sendbool
 	defer cancel()
 	err := m.DB.QueryRowContext(ctx, query, userID, date).Scan(&entryCount)
 	if err != nil {
+		print("error check 1")
 		sendbool <- false
 	}
+
+	print("error check 2")
 	sendbool <- (entryCount > 0)
 }
