@@ -135,3 +135,25 @@ func (m ExerciseMetricModel) CheckUserEntry(userID string, date time.Time, sendb
 	}
 	sendbool <- (entryCount > 0)
 }
+
+func (m ExerciseMetricModel) DeleteExerciseMetric(id int64, user_id string) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+	query := ` DELETE FROM user_exercise_metric WHERE id = $1 AND user_id = $2 `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	result, err := m.DB.ExecContext(ctx, query, id, user_id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+	return nil
+}

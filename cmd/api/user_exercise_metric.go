@@ -51,59 +51,6 @@ func (app *Application) GetUserExerciseMetrics(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// func (app *Application) UpdateUserExerciseMetrics(w http.ResponseWriter, r *http.Request) {
-// 	user := app.contextGetUser(r)
-// 	dateString, err := app.readStringParam(r, "date")
-// 	if err != nil {
-// 		app.badRequestResponse(w, r, err)
-// 		return
-// 	}
-// 	date, err := time.Parse("2006-01-02", dateString)
-// 	if err != nil {
-// 		app.badRequestResponse(w, r, errors.New("invalid date format"))
-// 		return
-// 	}
-
-// 	exerciseMetric, err := app.Models.ExerciseMetric.GetUserExerciseMetric(user.ID, date)
-// 	if err != nil {
-// 		switch {
-// 		case errors.Is(err, models.ErrRecordNotFound):
-// 			var input struct {
-// 				Name string `json:"name"`
-// 			}
-// 			err := app.readJSON(w, r, &input)
-// 			if err != nil {
-// 				app.badRequestResponse(w, r, err)
-// 				return
-// 			}
-// 			exerciseMetric := &models.ExerciseMetric{
-// 				UserID: user.ID,
-// 				Date:   date,
-// 				Name:   input.Name,
-// 			}
-
-// 			err = app.Models.ExerciseMetric.InsertExerciseMetric(exerciseMetric)
-
-// 			if err != nil {
-// 				app.serverErrorResponse(w, r, err)
-// 				return
-// 			}
-// 			env := envelope{
-// 				"message": "Successfully updated User Exercise Metrics!",
-// 			}
-
-// 			err = app.writeJSON(w, http.StatusOK, env, nil)
-// 			if err != nil {
-// 				app.serverErrorResponse(w, r, err)
-// 			}
-// 		default:
-// 			app.serverErrorResponse(w, r, err)
-// 		}
-// 		return
-// 	}
-
-// }
-
 func (app *Application) CreateExerciseMetric(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
@@ -139,7 +86,7 @@ func (app *Application) CreateExerciseMetric(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	env := envelope{
-		"message": "Successfully updated User Exercise Metrics!",
+		"message": "Successfully Created Exercise Metrics!",
 	}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
@@ -206,9 +153,32 @@ func (app *Application) UpdateExerciseMetric(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	env := envelope{
-		"message": "Successfully updated Exercise Metric",
+		"message": "Successfully Updated Exercise Metric",
 	}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) DeleteExerciseMetric(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.NotFoundResponse(w, r)
+		return
+	}
+	user := app.contextGetUser(r)
+	err = app.Models.ExerciseMetric.DeleteExerciseMetric(id, user.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrRecordNotFound):
+			app.NotFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Exercise Metric Successfully Deleted"}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
