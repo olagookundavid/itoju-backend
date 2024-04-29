@@ -130,15 +130,16 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	}
 
 	user := app.contextGetUser(r)
+
+	exerciseBoolResult := make(chan bool)
 	symsBoolResult := make(chan bool)
 	sleepBoolResult := make(chan bool)
 	foodBoolResult := make(chan bool)
-	exerciseBoolResult := make(chan bool)
 
+	defer close(exerciseBoolResult)
 	defer close(symsBoolResult)
 	defer close(sleepBoolResult)
 	defer close(foodBoolResult)
-	defer close(exerciseBoolResult)
 
 	app.Background(func() {
 		app.Models.SymsMetric.CheckUserEntry(user.ID, date, symsBoolResult)
