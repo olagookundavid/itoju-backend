@@ -193,7 +193,7 @@ func (app *Application) UpdateUserFoodMetrics(w http.ResponseWriter, r *http.Req
 				return
 			}
 			env := envelope{
-				"message": "Successfully updated User Sleep Metrics!",
+				"message": "Successfully updated User Food Metrics!",
 			}
 
 			err = app.writeJSON(w, http.StatusOK, env, nil)

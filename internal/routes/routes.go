@@ -73,7 +73,9 @@ func Routes(app *api.Application) http.Handler {
 
 	//SleepMetrics
 	router.Handler(http.MethodGet, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserSleepMetrics)))
-	router.Handler(http.MethodPut, "/v1/user/sleep_metrics/:date/:is_night", app.RequireActivatedAndAuthedUser((app.UpdateSleepMetric)))
+	router.Handler(http.MethodPut, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.UpdateSleepMetric)))
+	router.Handler(http.MethodPost, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateSleepMetric)))
+	router.Handler(http.MethodDelete, "/v1/user/sleep_metrics/:id", app.RequireActivatedAndAuthedUser((app.DeleteSleepMetric)))
 
 	//FoodMetrics
 	router.Handler(http.MethodGet, "/v1/user/food_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserFoodMetrics)))

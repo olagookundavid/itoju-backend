@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/olagookundavid/itoju/internal/validator"
 )
 
 type Resources struct {
@@ -20,6 +21,13 @@ type Resources struct {
 
 type ResourcesModel struct {
 	DB *sql.DB
+}
+
+func ValidateResource(v *validator.Validator, resource *Resources) {
+	v.Check(resource.Name != "", "name", "must be provided")
+	v.Check(resource.ImageUrl != "", "image url", "must be provided")
+	v.Check(resource.Link != "", "link", "must be provided")
+
 }
 
 func (m ResourcesModel) GetResources() ([]*Resources, error) {

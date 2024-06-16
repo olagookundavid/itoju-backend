@@ -23,15 +23,45 @@ type SleepMetricModel struct {
 	DB *sql.DB
 }
 
-func (m SleepMetricModel) GetUserSleepMetric(userId string, date time.Time, isNight bool) (*SleepMetric, error) {
+func (m SleepMetricModel) GetUserSleepMetrics(userId string, date time.Time) ([]*SleepMetric, error) {
+
 	query := `
-    SELECT usm.id, usm.is_night, usm.time_slept, usm.time_woke_up, usm.tags, usm.date, usm.severity
+	SELECT usm.id, usm.is_night, usm.time_slept, usm.time_woke_up, usm.tags, usm.date, usm.severity
     FROM user_sleep_metric usm
-    WHERE usm.user_id = $1 AND usm.date = $2 AND usm.is_night = $3
+    WHERE usm.user_id = $1 AND usm.date = $2
     `
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	row := m.DB.QueryRowContext(ctx, query, userId, date, isNight)
+	rows, err := m.DB.QueryContext(ctx, query, userId, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	sleepsMetrics := []*SleepMetric{}
+	for rows.Next() {
+		var sleepMetric SleepMetric
+		err := rows.Scan(&sleepMetric.ID, &sleepMetric.IsNight, &sleepMetric.TimeSlept, &sleepMetric.TimeWokeUp, pq.Array(&sleepMetric.Tags), &sleepMetric.Date, &sleepMetric.Severity)
+		if err != nil {
+			return nil, err
+		}
+
+		sleepsMetrics = append(sleepsMetrics, &sleepMetric)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return sleepsMetrics, nil
+}
+
+func (m SleepMetricModel) GetUserSleepMetric(userId string, date time.Time) (*SleepMetric, error) {
+	query := `
+    SELECT usm.id, usm.is_night, usm.time_slept, usm.time_woke_up, usm.tags, usm.date, usm.severity
+    FROM user_sleep_metric usm
+    WHERE usm.user_id = $1 AND usm.date = $2
+    `
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	row := m.DB.QueryRowContext(ctx, query, userId, date)
 
 	var sleepMetric SleepMetric
 	err := row.Scan(&sleepMetric.ID, &sleepMetric.IsNight, &sleepMetric.TimeSlept, &sleepMetric.TimeWokeUp, pq.Array(&sleepMetric.Tags), &sleepMetric.Date, &sleepMetric.Severity)
@@ -75,6 +105,28 @@ func (m SleepMetricModel) UpdateSleepMetric(sleepMetric *SleepMetric) error {
 		default:
 			return err
 		}
+	}
+	return nil
+}
+
+func (m SleepMetricModel) DeleteSleepMetric(id int64, user_id string) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+	query := ` DELETE FROM user_sleep_metric WHERE id = $1 AND user_id = $2 `
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	result, err := m.DB.ExecContext(ctx, query, id, user_id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
 	}
 	return nil
 }

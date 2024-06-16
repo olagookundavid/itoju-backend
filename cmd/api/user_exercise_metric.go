@@ -78,7 +78,6 @@ func (app *Application) CreateExerciseMetric(w http.ResponseWriter, r *http.Requ
 		Date:   date,
 		Name:   input.Name,
 	}
-	print(user.ID)
 	err = app.Models.ExerciseMetric.InsertExerciseMetric(exerciseMetric)
 
 	if err != nil {

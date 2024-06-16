@@ -89,22 +89,6 @@ func ValidateUser(v *validator.Validator, user *User) {
 		panic("missing password hash for user")
 	}
 }
-func ValidateResource(v *validator.Validator, resource *Resources) {
-	v.Check(resource.Name != "", "name", "must be provided")
-	v.Check(resource.ImageUrl != "", "image url", "must be provided")
-	v.Check(resource.Link != "", "link", "must be provided")
-
-}
-
-func ValidateMenses(v *validator.Validator, menses *Menses) {
-	v.Check(menses.Period_len >= 0, "Period length", "cannot be less or equals zero")
-	v.Check(menses.Cycle_len >= 0, "Cycle length", "cannot be less or equals zero")
-}
-
-func ValidateBodyMeasure(v *validator.Validator, bodyMeasure *BodyMeasure) {
-	v.Check(bodyMeasure.Height >= 0, "Height", "cannot be less or equals zero")
-	v.Check(bodyMeasure.Weight >= 0, "Weight", "cannot be less or equals zero")
-}
 
 func (m UserModel) Insert(user *User) error {
 	query := ` INSERT INTO users (first_name, last_name, date_of_birth, email, password_hash, activated) 
