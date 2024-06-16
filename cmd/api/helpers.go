@@ -16,36 +16,6 @@ import (
 
 type envelope map[string]any
 
-func (app *Application) readIDParam(r *http.Request) (int64, error) {
-	params := httprouter.ParamsFromContext(r.Context())
-	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
-	if err != nil || id < 1 {
-		return 0, errors.New("invalid id parameter")
-	}
-	return id, nil
-}
-
-func (app *Application) readStringParam(r *http.Request, paramName string) (string, error) {
-	params := httprouter.ParamsFromContext(r.Context())
-	value := params.ByName(paramName)
-	if value == "" {
-		return "", fmt.Errorf("missing %s parameter", paramName)
-	}
-	return value, nil
-}
-
-func (app *Application) readBoolParam(r *http.Request, paramName string) (bool, error) {
-	params := httprouter.ParamsFromContext(r.Context())
-	value := params.ByName(paramName)
-	if value == "" {
-		return false, fmt.Errorf("missing %s parameter", paramName)
-	}
-	boolValue, err := strconv.ParseBool(value)
-	if err != nil {
-		return false, fmt.Errorf("invalid boolean value for %s parameter", paramName)
-	}
-	return boolValue, nil
-}
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
 	// Encode the data to JSON, returning the error if there was one.
 	js, err := json.Marshal(data)
@@ -104,6 +74,37 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 		}
 	}
 	return nil
+}
+
+func (app *Application) readIDParam(r *http.Request) (int64, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
+	if err != nil || id < 1 {
+		return 0, errors.New("invalid id parameter")
+	}
+	return id, nil
+}
+
+func (app *Application) readStringParam(r *http.Request, paramName string) (string, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	value := params.ByName(paramName)
+	if value == "" {
+		return "", fmt.Errorf("missing %s parameter", paramName)
+	}
+	return value, nil
+}
+
+func (app *Application) readBoolParam(r *http.Request, paramName string) (bool, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	value := params.ByName(paramName)
+	if value == "" {
+		return false, fmt.Errorf("missing %s parameter", paramName)
+	}
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, fmt.Errorf("invalid boolean value for %s parameter", paramName)
+	}
+	return boolValue, nil
 }
 
 func (app *Application) readString(qs url.Values, key string, defaultValue string) string {

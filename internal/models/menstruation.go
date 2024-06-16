@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/olagookundavid/itoju/internal/validator"
 )
 
 type Menses struct {
@@ -15,6 +17,11 @@ type Menses struct {
 
 type MensesModels struct {
 	DB *sql.DB
+}
+
+func ValidateMenses(v *validator.Validator, menses *Menses) {
+	v.Check(menses.Period_len >= 0, "Period length", "cannot be less or equals zero")
+	v.Check(menses.Cycle_len >= 0, "Cycle length", "cannot be less or equals zero")
 }
 
 func (m MensesModels) GetMenses(id string) (*Menses, error) {

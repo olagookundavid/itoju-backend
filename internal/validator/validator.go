@@ -18,6 +18,7 @@ func (v *Validator) Valid() bool {
 	return len(v.Errors) == 0
 }
 
+// This func can be made to return early and thus saving us latency
 func (v *Validator) AddError(key, message string) {
 	if _, exists := v.Errors[key]; !exists {
 		v.Errors[key] = message

@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/olagookundavid/itoju/internal/validator"
 )
 
 type BodyMeasure struct {
@@ -15,6 +17,11 @@ type BodyMeasure struct {
 
 type BodyMeasureModel struct {
 	DB *sql.DB
+}
+
+func ValidateBodyMeasure(v *validator.Validator, bodyMeasure *BodyMeasure) {
+	v.Check(bodyMeasure.Height >= 0, "Height", "cannot be less or equals zero")
+	v.Check(bodyMeasure.Weight >= 0, "Weight", "cannot be less or equals zero")
 }
 
 func (m BodyMeasureModel) GetBodyMeasure(id string) (*BodyMeasure, error) {
