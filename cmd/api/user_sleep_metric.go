@@ -29,7 +29,7 @@ func (app *Application) GetUserSleepMetrics(w http.ResponseWriter, r *http.Reque
 	}
 
 	env := envelope{
-		"message":      "Retrieved All Symptom Metrics for user",
+		"message":      "Retrieved All Sleep Metrics for user",
 		"sleepMetrics": sleepMetric}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
@@ -41,14 +41,9 @@ func (app *Application) GetUserSleepMetrics(w http.ResponseWriter, r *http.Reque
 
 /*
  func (app *Application) FormerGetUserSleepMetrics(w http.ResponseWriter, r *http.Request) {
-	dateString, err := app.readStringParam(r, "date")
+	date, err := app.GetDate(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
 		return
 	}
 	user := app.contextGetUser(r)
@@ -100,17 +95,12 @@ func (app *Application) getUserSleepMetricAsync(userID string, date time.Time, s
 
 func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	dateString, err := app.readStringParam(r, "date")
+	id, err := app.readIDParam(r)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		app.NotFoundResponse(w, r)
 		return
 	}
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
-		return
-	}
-	sleepMetric, err := app.Models.SleepMetric.GetUserSleepMetric(user.ID, date)
+	sleepMetric, err := app.Models.SleepMetric.GetUserSleepMetric(user.ID, id)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):
@@ -168,14 +158,9 @@ func (app *Application) UpdateSleepMetric(w http.ResponseWriter, r *http.Request
 func (app *Application) CreateSleepMetric(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
-	dateString, err := app.readStringParam(r, "date")
+	date, err := app.GetDate(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
 		return
 	}
 
@@ -201,7 +186,7 @@ func (app *Application) CreateSleepMetric(w http.ResponseWriter, r *http.Request
 		return
 	}
 	env := envelope{
-		"message": "Successfully updated User Sleep Metrics!",
+		"message": "Successfully Created User Sleep Metrics!",
 	}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
@@ -229,7 +214,7 @@ func (app *Application) DeleteSleepMetric(w http.ResponseWriter, r *http.Request
 		}
 		return
 	}
-	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Symptom Metric successfully deleted"}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Sleep Metric successfully deleted"}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

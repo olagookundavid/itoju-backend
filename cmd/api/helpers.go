@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/olagookundavid/itoju/internal/validator"
@@ -92,6 +93,18 @@ func (app *Application) readStringParam(r *http.Request, paramName string) (stri
 		return "", fmt.Errorf("missing %s parameter", paramName)
 	}
 	return value, nil
+}
+
+func (app *Application) GetDate(r *http.Request) (time.Time, error) {
+	dateString, err := app.readStringParam(r, "date")
+	if err != nil {
+		return time.Now(), err
+	}
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		return time.Now(), errors.New("invalid date format")
+	}
+	return date, nil
 }
 
 func (app *Application) readBoolParam(r *http.Request, paramName string) (bool, error) {

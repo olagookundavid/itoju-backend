@@ -3,20 +3,14 @@ package api
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/olagookundavid/itoju/internal/models"
 )
 
 func (app *Application) GetUserFoodMetrics(w http.ResponseWriter, r *http.Request) {
-	dateString, err := app.readStringParam(r, "date")
+	date, err := app.GetDate(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
 		return
 	}
 	user := app.contextGetUser(r)
@@ -53,14 +47,9 @@ func (app *Application) GetUserFoodMetrics(w http.ResponseWriter, r *http.Reques
 
 func (app *Application) UpdateUserFoodMetrics(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	dateString, err := app.readStringParam(r, "date")
+	date, err := app.GetDate(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
 		return
 	}
 

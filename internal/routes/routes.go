@@ -73,7 +73,7 @@ func Routes(app *api.Application) http.Handler {
 
 	//SleepMetrics
 	router.Handler(http.MethodGet, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserSleepMetrics)))
-	router.Handler(http.MethodPut, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.UpdateSleepMetric)))
+	router.Handler(http.MethodPut, "/v1/user/sleep_metrics/:id", app.RequireActivatedAndAuthedUser((app.UpdateSleepMetric)))
 	router.Handler(http.MethodPost, "/v1/user/sleep_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateSleepMetric)))
 	router.Handler(http.MethodDelete, "/v1/user/sleep_metrics/:id", app.RequireActivatedAndAuthedUser((app.DeleteSleepMetric)))
 
@@ -86,6 +86,24 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodPost, "/v1/user/exercise_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateExerciseMetric)))
 	router.Handler(http.MethodPut, "/v1/user/exercise_metrics/:id", app.RequireActivatedAndAuthedUser((app.UpdateExerciseMetric)))
 	router.Handler(http.MethodDelete, "/v1/user/exercise_metrics/:id", app.RequireActivatedAndAuthedUser((app.DeleteExerciseMetric)))
+
+	//UrineMetrics
+	router.Handler(http.MethodGet, "/v1/user/urine_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserUrineMetrics)))
+	router.Handler(http.MethodPut, "/v1/user/urine_metrics/:id", app.RequireActivatedAndAuthedUser((app.UpdateUrineMetric)))
+	router.Handler(http.MethodPost, "/v1/user/urine_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateUrineMetric)))
+	router.Handler(http.MethodDelete, "/v1/user/urine_metrics/:id", app.RequireActivatedAndAuthedUser((app.DeleteUrineMetric)))
+
+	//MedicationMetrics
+	router.Handler(http.MethodGet, "/v1/user/medication_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserMedicationMetrics)))
+	router.Handler(http.MethodPut, "/v1/user/medication_metrics/:id", app.RequireActivatedAndAuthedUser((app.UpdateMedicationMetric)))
+	router.Handler(http.MethodPost, "/v1/user/medication_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateMedicationMetric)))
+	router.Handler(http.MethodDelete, "/v1/user/medication_metrics/:id", app.RequireActivatedAndAuthedUser((app.DeleteMedicationMetric)))
+
+	//BowelMetrics
+	router.Handler(http.MethodGet, "/v1/user/bowel_metrics/:date", app.RequireActivatedAndAuthedUser((app.GetUserBowelMetrics)))
+	router.Handler(http.MethodPut, "/v1/user/bowel_metrics/:id", app.RequireActivatedAndAuthedUser((app.UpdateBowelMetric)))
+	router.Handler(http.MethodPost, "/v1/user/bowel_metrics/:date", app.RequireActivatedAndAuthedUser((app.CreateBowelMetric)))
+	router.Handler(http.MethodDelete, "/v1/user/bowel_metrics/:id", app.RequireActivatedAndAuthedUser((app.DeleteBowelMetric)))
 
 	//Achievement
 	router.Handler(http.MethodGet, "/v1/user/getDaysTracked", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedInARow)))
