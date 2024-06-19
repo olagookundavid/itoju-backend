@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/olagookundavid/itoju/internal/models"
 )
@@ -118,14 +117,9 @@ func (app *Application) DeleteUserTrackedMetrics(w http.ResponseWriter, r *http.
 
 func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.Request) {
 
-	dateString, err := app.readStringParam(r, "date")
+	date, err := app.GetDate(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
 		return
 	}
 
@@ -135,11 +129,17 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	symsBoolResult := make(chan bool)
 	sleepBoolResult := make(chan bool)
 	foodBoolResult := make(chan bool)
+	medicationBoolResult := make(chan bool)
+	bowelBoolResult := make(chan bool)
+	urineBoolResult := make(chan bool)
 
 	defer close(exerciseBoolResult)
 	defer close(symsBoolResult)
 	defer close(sleepBoolResult)
 	defer close(foodBoolResult)
+	defer close(medicationBoolResult)
+	defer close(bowelBoolResult)
+	defer close(urineBoolResult)
 
 	app.Background(func() {
 		app.Models.SymsMetric.CheckUserEntry(user.ID, date, symsBoolResult)
@@ -153,17 +153,32 @@ func (app *Application) GetTrackedMetricsStatus(w http.ResponseWriter, r *http.R
 	app.Background(func() {
 		app.Models.ExerciseMetric.CheckUserEntry(user.ID, date, exerciseBoolResult)
 	})
+	app.Background(func() {
+		app.Models.MedicationMetric.CheckUserEntry(user.ID, date, medicationBoolResult)
+	})
+	app.Background(func() {
+		app.Models.BowelMetric.CheckUserEntry(user.ID, date, bowelBoolResult)
+	})
+	app.Background(func() {
+		app.Models.UrineMetric.CheckUserEntry(user.ID, date, urineBoolResult)
+	})
 
 	symsBool := <-symsBoolResult
 	sleepBool := <-sleepBoolResult
 	foodBool := <-foodBoolResult
 	exerciseBool := <-exerciseBoolResult
+	medicationBool := <-medicationBoolResult
+	urineBool := <-urineBoolResult
+	bowelBool := <-bowelBoolResult
 
 	resultMap := make(map[string]bool)
 	resultMap["symptoms"] = symsBool
 	resultMap["sleep"] = sleepBool
 	resultMap["food"] = foodBool
 	resultMap["exercise"] = exerciseBool
+	resultMap["bowel"] = bowelBool
+	resultMap["medication"] = medicationBool
+	resultMap["urine"] = urineBool
 
 	env := envelope{
 		"message": "retrieved Tracked Metric Status for User", "metrics_status": resultMap}
