@@ -75,6 +75,9 @@ func (app *Application) UpdateUrineMetric(w http.ResponseWriter, r *http.Request
 	if input.Tags != nil {
 		urineMetric.Tags = *input.Tags
 	}
+	if input.Quantity != nil {
+		urineMetric.Quantity = *input.Quantity
+	}
 
 	err = app.Models.UrineMetric.UpdateUrineMetric(urineMetric)
 	if err != nil {
