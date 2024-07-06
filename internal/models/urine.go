@@ -78,7 +78,7 @@ func (m UrineMetricModel) InsertUrineMetric(userID string, urineMetric *UrineMet
 
 	query := `
 	INSERT INTO user_urine_metric (user_id, time, pain, type, date, tags, quantity)
-	VALUES ($1, $2, $3, $4, $5, $6) `
+	VALUES ($1, $2, $3, $4, $5, $6, $7) `
 
 	args := []any{userID, urineMetric.Time, urineMetric.Pain, urineMetric.Type, urineMetric.Date, pq.Array(urineMetric.Tags), urineMetric.Quantity}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
