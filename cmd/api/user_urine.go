@@ -51,10 +51,11 @@ func (app *Application) UpdateUrineMetric(w http.ResponseWriter, r *http.Request
 	}
 
 	var input struct {
-		Time *string   `json:"time"`
-		Type *float64  `json:"type"`
-		Pain *float64  `json:"pain"`
-		Tags *[]string `json:"tags"`
+		Time     *string   `json:"time"`
+		Type     *float64  `json:"type"`
+		Pain     *float64  `json:"pain"`
+		Quantity *float64  `json:"quantity"`
+		Tags     *[]string `json:"tags"`
 	}
 	err = app.readJSON(w, r, &input)
 	if err != nil {
@@ -104,10 +105,11 @@ func (app *Application) CreateUrineMetric(w http.ResponseWriter, r *http.Request
 	}
 
 	var input struct {
-		Time string   `json:"time"`
-		Type float64  `json:"type"`
-		Pain float64  `json:"pain"`
-		Tags []string `json:"tags"`
+		Time     string   `json:"time"`
+		Type     float64  `json:"type"`
+		Pain     float64  `json:"pain"`
+		Quantity float64  `json:"quantity"`
+		Tags     []string `json:"tags"`
 	}
 	err = app.readJSON(w, r, &input)
 	if err != nil {
@@ -115,7 +117,7 @@ func (app *Application) CreateUrineMetric(w http.ResponseWriter, r *http.Request
 		return
 	}
 	urineMetric := &models.UrineMetric{
-		Time: input.Time, Type: input.Type, Pain: input.Pain, Tags: input.Tags, Date: date}
+		Time: input.Time, Type: input.Type, Pain: input.Pain, Tags: input.Tags, Quantity: input.Quantity, Date: date}
 
 	err = app.Models.UrineMetric.InsertUrineMetric(user.ID, urineMetric)
 
