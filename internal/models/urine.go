@@ -10,12 +10,13 @@ import (
 )
 
 type UrineMetric struct {
-	ID   int       `json:"id"`
-	Time string    `json:"time"`
-	Tags []string  `json:"tags"`
-	Date time.Time `json:"date"`
-	Type float64   `json:"type"`
-	Pain float64   `json:"pain"`
+	ID       int       `json:"id"`
+	Time     string    `json:"time"`
+	Tags     []string  `json:"tags"`
+	Date     time.Time `json:"date"`
+	Type     float64   `json:"type"`
+	Pain     float64   `json:"pain"`
+	Quantity float64   `json:"quantity"`
 }
 
 type UrineMetricModel struct {
@@ -25,7 +26,7 @@ type UrineMetricModel struct {
 func (m UrineMetricModel) GetUserUrineMetrics(userId string, date time.Time) ([]*UrineMetric, error) {
 
 	query := `
-	SELECT uum.id, uum.time, uum.type, uum.pain, uum.tags, uum.date
+	SELECT uum.id, uum.time, uum.type, uum.pain, uum.tags, uum.date, uum.quantity
     FROM user_urine_metric uum
     WHERE uum.user_id = $1 AND uum.date = $2
     `
@@ -39,7 +40,7 @@ func (m UrineMetricModel) GetUserUrineMetrics(userId string, date time.Time) ([]
 	urineMetrics := []*UrineMetric{}
 	for rows.Next() {
 		var urineMetric UrineMetric
-		err := rows.Scan(&urineMetric.ID, &urineMetric.Time, &urineMetric.Type, &urineMetric.Pain, pq.Array(&urineMetric.Tags), &urineMetric.Date)
+		err := rows.Scan(&urineMetric.ID, &urineMetric.Time, &urineMetric.Type, &urineMetric.Pain, pq.Array(&urineMetric.Tags), &urineMetric.Date, &urineMetric.Quantity)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +55,7 @@ func (m UrineMetricModel) GetUserUrineMetrics(userId string, date time.Time) ([]
 
 func (m UrineMetricModel) GetUserUrineMetric(userId string, id int64) (*UrineMetric, error) {
 	query := `
-    SELECT uum.id, uum.time, uum.type, uum.pain, uum.tags, uum.date
+    SELECT uum.id, uum.time, uum.type, uum.pain, uum.tags, uum.date, uum.quantity
     FROM user_urine_metric uum
     WHERE uum.user_id = $1 AND uum.id = $2
     `
@@ -63,7 +64,7 @@ func (m UrineMetricModel) GetUserUrineMetric(userId string, id int64) (*UrineMet
 	row := m.DB.QueryRowContext(ctx, query, userId, id)
 
 	var urineMetric UrineMetric
-	err := row.Scan(&urineMetric.ID, &urineMetric.Time, &urineMetric.Type, &urineMetric.Pain, pq.Array(&urineMetric.Tags), &urineMetric.Date)
+	err := row.Scan(&urineMetric.ID, &urineMetric.Time, &urineMetric.Type, &urineMetric.Pain, pq.Array(&urineMetric.Tags), &urineMetric.Date, &urineMetric.Quantity)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrRecordNotFound
@@ -76,10 +77,10 @@ func (m UrineMetricModel) GetUserUrineMetric(userId string, id int64) (*UrineMet
 func (m UrineMetricModel) InsertUrineMetric(userID string, urineMetric *UrineMetric) error {
 
 	query := `
-	INSERT INTO user_urine_metric (user_id, time, pain, type, date, tags)
+	INSERT INTO user_urine_metric (user_id, time, pain, type, date, tags, quantity)
 	VALUES ($1, $2, $3, $4, $5, $6) `
 
-	args := []any{userID, urineMetric.Time, urineMetric.Pain, urineMetric.Type, urineMetric.Date, pq.Array(urineMetric.Tags)}
+	args := []any{userID, urineMetric.Time, urineMetric.Pain, urineMetric.Type, urineMetric.Date, pq.Array(urineMetric.Tags), urineMetric.Quantity}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
@@ -91,9 +92,9 @@ func (m UrineMetricModel) InsertUrineMetric(userID string, urineMetric *UrineMet
 
 func (m UrineMetricModel) UpdateUrineMetric(urineMetric *UrineMetric) error {
 
-	query := ` UPDATE user_urine_metric SET time = $1, pain = $2, type = $3, tags = $4 WHERE id = $5; `
+	query := ` UPDATE user_urine_metric SET time = $1, pain = $2, type = $3, tags = $4, quantity = $5 WHERE id = $6; `
 
-	args := []any{urineMetric.Time, urineMetric.Pain, urineMetric.Type, pq.Array(urineMetric.Tags), urineMetric.ID}
+	args := []any{urineMetric.Time, urineMetric.Pain, urineMetric.Type, pq.Array(urineMetric.Tags), urineMetric.Quantity, urineMetric.ID}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
