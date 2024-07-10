@@ -1,24 +1,32 @@
-FROM golang:1.21-alpine AS builder
+# FROM golang:1.21-alpine AS builder
 
-WORKDIR /app
+# WORKDIR /app
 
-COPY go.mod go.sum ./
+# COPY go.mod go.sum ./
 
-RUN go mod download
-RUN go mod tidy && \
-    go mod verify
+# RUN go mod download
+# RUN go mod tidy && \
+#     go mod verify
 
-COPY . .
+# COPY . .
 
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
+# RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
 
-FROM alpine:edge
+# FROM alpine:edge
 
-COPY --from=builder /app/api api
-COPY --from=builder /app/.env .env
+# COPY --from=builder /app/api api
+# COPY --from=builder /app/.env .env
 
-EXPOSE 5132
+# EXPOSE 5132
 
-CMD ["./api"]
+# CMD ["./api"]
+# docker run --rm -p 8000:8000 -e DB_URL=postgres://djjsagev:WG11sRXwe2q1C0I9-3XhTZywTnhbZQPJ@stampy.db.elephantsql.com/djjsagev itojuapp
 
+FROM alpine:latest
+
+RUN mkdir /app
+
+COPY bin/itojuApp /app
+
+CMD [ "/app/itojuApp"]
