@@ -28,6 +28,7 @@ type Models struct {
 	UrineMetric      UrineMetricModel
 	BowelMetric      BowelMetricModel
 	MedicationMetric MedicationMetricModel
+	AnalyticsMetric  AnalyticsModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -48,5 +49,6 @@ func NewModels(db *sql.DB) Models {
 		UrineMetric:      UrineMetricModel{DB: db},
 		BowelMetric:      BowelMetricModel{DB: db},
 		MedicationMetric: MedicationMetricModel{DB: db},
+		AnalyticsMetric:  AnalyticsModel{DB: db},
 	}
 }

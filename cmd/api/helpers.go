@@ -85,6 +85,14 @@ func (app *Application) readIDParam(r *http.Request) (int64, error) {
 	}
 	return id, nil
 }
+func (app *Application) readIntParam(r *http.Request, intName string) (int64, error) {
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.ParseInt(params.ByName(intName), 10, 64)
+	if err != nil || id < 1 {
+		return 0, fmt.Errorf("invalid %s parameter", intName)
+	}
+	return id, nil
+}
 
 func (app *Application) readStringParam(r *http.Request, paramName string) (string, error) {
 	params := httprouter.ParamsFromContext(r.Context())
