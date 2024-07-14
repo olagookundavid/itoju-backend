@@ -93,7 +93,7 @@ func (app *Application) GetTagsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 
 }
 
-func EnsureAllDaysPresent(metrics map[int]int) map[int]int {
+func EnsureAllDaysPresent(metrics map[int]float64) map[int]float64 {
 	for i := 0; i <= 6; i++ {
 		if _, exists := metrics[i]; !exists {
 			metrics[i] = 0

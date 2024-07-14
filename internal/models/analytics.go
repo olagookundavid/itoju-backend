@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -15,11 +16,11 @@ type AnalyticsModel struct {
 }
 
 // getSymptomOccurrences retrieves the count of symptom occurrences for the specified period
-func (m AnalyticsModel) GetSymptomOccurrences(userID string, symptomID int, days int) (map[int]int, error) {
+func (m AnalyticsModel) GetSymptomOccurrences(userID string, symptomID int, days int) (map[int]float64, error) {
 	query := fmt.Sprintf(`
 	SELECT
 		EXTRACT(DOW FROM date) AS day_of_week,
-		COUNT(*) AS occurrences
+		AVG((morning_severity + afternoon_severity + night_severity) / 3) AS average_severity
 	FROM
 		user_symptoms_metric
 	WHERE
@@ -40,22 +41,26 @@ func (m AnalyticsModel) GetSymptomOccurrences(userID string, symptomID int, days
 	}
 	defer rows.Close()
 
-	symptomOccurrences := make(map[int]int)
+	symptomOccurrences := make(map[int]float64)
 	for rows.Next() {
 		var sc SymptomCount
-		err := rows.Scan(&sc.DayOfWeek, &sc.Occurrences)
+		err := rows.Scan(&sc.DayOfWeek, &sc.AvgSev)
 		if err != nil {
 			return nil, fmt.Errorf("scan error: %v", err)
 		}
-		symptomOccurrences[sc.DayOfWeek] = sc.Occurrences
+		symptomOccurrences[sc.DayOfWeek] = Round(sc.AvgSev, 2)
 	}
 
 	return symptomOccurrences, nil
 }
+func Round(val float64, precision int) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
 
 type SymptomCount struct {
-	DayOfWeek   int `json:"day_of_week"`
-	Occurrences int `json:"occurrences"`
+	DayOfWeek int     `json:"day_of_week"`
+	AvgSev    float64 `json:"occurrences"`
 }
 
 func (m AnalyticsModel) GetBowelTypeOccurrences(userID string, days int) (map[string][]KeyValue, error) {
