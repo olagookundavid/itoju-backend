@@ -67,8 +67,16 @@ func (app *Application) GetTagsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	tagToQuery, err := app.readStringParam(r, "tag")
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	if tagToQuery == "General" {
+		tagToQuery = ""
+	}
 
-	analytics, err := app.Models.AnalyticsMetric.GetTagOccurrences(user.ID, int(days), "")
+	analytics, err := app.Models.AnalyticsMetric.GetTagOccurrences(user.ID, int(days), tagToQuery)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

@@ -110,7 +110,7 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodGet, "/v1/user/getDaysTrackedFree", app.RequireActivatedAndAuthedUser((app.GetDaysTrackedFree)))
 
 	//Analytics
-	router.Handler(http.MethodGet, "/v1/user/tag_days_analytics/:days", app.RequireActivatedAndAuthedUser((app.GetTagsDaysAnalytics)))
+	router.Handler(http.MethodGet, "/v1/user/tag_days_analytics/:days/:tag", app.RequireActivatedAndAuthedUser((app.GetTagsDaysAnalytics)))
 	router.Handler(http.MethodGet, "/v1/user/bowel_days_analytics/:days", app.RequireActivatedAndAuthedUser((app.GetBowelDaysAnalytics)))
 	router.Handler(http.MethodGet, "/v1/user/syms_days_analytics/:id/:days", app.RequireActivatedAndAuthedUser((app.GetSymsDaysAnalytics)))
 
