@@ -128,6 +128,8 @@ func (app *Application) readBoolParam(r *http.Request, paramName string) (bool, 
 	return boolValue, nil
 }
 
+//For flexible update querys
+
 func (app *Application) readString(qs url.Values, key string, defaultValue string) string {
 
 	s := qs.Get(key)
