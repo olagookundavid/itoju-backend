@@ -83,3 +83,8 @@ build/api:
 build/docker: build/api
 	@echo 'Building docker...' 
 	docker build -t itojuapp . 
+
+.PHONY: run/docker 
+run/docker: build/docker
+	@echo 'Building docker...' 
+	docker run -e DB_URL=postgres://djjsagev:WG11sRXwe2q1C0I9-3XhTZywTnhbZQPJ@stampy.db.elephantsql.com/djjsagev itojuapp
