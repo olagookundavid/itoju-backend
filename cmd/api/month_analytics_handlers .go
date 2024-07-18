@@ -4,15 +4,15 @@ import (
 	"net/http"
 )
 
-func (app *Application) GetBowelDaysAnalytics(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetMonthBowelAnalytics(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
-	days, err := app.readIntParam(r, "days")
+	month, err := app.readIntParam(r, "month")
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	analytics, err := app.Models.AnalyticsMetric.GetBowelTypeOccurrences(user.ID, int(days))
+	analytics, err := app.Models.AnalyticsMetric.GetMonthBowelTypeOccurrences(user.ID, int(month))
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -29,7 +29,7 @@ func (app *Application) GetBowelDaysAnalytics(w http.ResponseWriter, r *http.Req
 
 }
 
-func (app *Application) GetSymsDaysAnalytics(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetSymsMonthAnalytics(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
 	id, err := app.readIDParam(r)
@@ -37,12 +37,12 @@ func (app *Application) GetSymsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 		app.NotFoundResponse(w, r)
 		return
 	}
-	days, err := app.readIntParam(r, "days")
+	month, err := app.readIntParam(r, "month")
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	analytics, err := app.Models.AnalyticsMetric.GetSymptomOccurrences(user.ID, int(id), int(days))
+	analytics, err := app.Models.AnalyticsMetric.GetMonthSymptomOccurrences(user.ID, int(id), int(month))
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -50,7 +50,7 @@ func (app *Application) GetSymsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 
 	env := envelope{
 		"message":          "Retrieved All Analytics for user",
-		"analyticsMetrics": EnsureAllDaysPresent(analytics)}
+		"analyticsMetrics": EnsureAllWeeksPresent(analytics)}
 
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
@@ -59,10 +59,10 @@ func (app *Application) GetSymsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 
 }
 
-func (app *Application) GetTagsDaysAnalytics(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetTagsMonthAnalytics(w http.ResponseWriter, r *http.Request) {
 
 	user := app.contextGetUser(r)
-	days, err := app.readIntParam(r, "days")
+	month, err := app.readIntParam(r, "month")
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -76,7 +76,7 @@ func (app *Application) GetTagsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 		tagToQuery = ""
 	}
 
-	analytics, err := app.Models.AnalyticsMetric.GetTagOccurrences(user.ID, int(days), tagToQuery)
+	analytics, err := app.Models.AnalyticsMetric.GetMonthTagOccurrences(user.ID, int(month), tagToQuery)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -93,8 +93,8 @@ func (app *Application) GetTagsDaysAnalytics(w http.ResponseWriter, r *http.Requ
 
 }
 
-func EnsureAllDaysPresent(metrics map[int]float64) map[int]float64 {
-	for i := 0; i <= 6; i++ {
+func EnsureAllWeeksPresent(metrics map[int]float64) map[int]float64 {
+	for i := 0; i <= 5; i++ {
 		if _, exists := metrics[i]; !exists {
 			metrics[i] = 0
 		}

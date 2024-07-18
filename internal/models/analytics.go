@@ -4,19 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 )
 
-type Analytics struct {
-}
 type AnalyticsModel struct {
 	DB *sql.DB
 }
 
 // getSymptomOccurrences retrieves the count of symptom occurrences for the specified period
-func (m AnalyticsModel) GetSymptomOccurrences(userID string, symptomID int, days int) (map[int]float64, error) {
+func (m AnalyticsModel) GetSymptom7DaysOccurrences(userID string, symptomID int, days int) (map[int]float64, error) {
 	query := fmt.Sprintf(`
 	SELECT
 		EXTRACT(DOW FROM date) AS day_of_week,
@@ -48,22 +45,25 @@ func (m AnalyticsModel) GetSymptomOccurrences(userID string, symptomID int, days
 		if err != nil {
 			return nil, fmt.Errorf("scan error: %v", err)
 		}
-		symptomOccurrences[sc.DayOfWeek] = Round(sc.AvgSev, 2)
+		symptomOccurrences[sc.DayOfWeek] = Round(sc.AvgSev)
 	}
 
 	return symptomOccurrences, nil
 }
-func Round(val float64, precision int) float64 {
-	ratio := math.Pow(10, float64(precision))
-	return math.Round(val*ratio) / ratio
+func Round(val float64) float64 {
+	str := fmt.Sprintf("%.2f", val)
+	roundedVal, _ := strconv.ParseFloat(str, 64)
+	return roundedVal
 }
 
 type SymptomCount struct {
-	DayOfWeek int     `json:"day_of_week"`
-	AvgSev    float64 `json:"occurrences"`
+	DayOfWeek   int
+	WeekOfMonth int
+	MonthOfYear int
+	AvgSev      float64
 }
 
-func (m AnalyticsModel) GetBowelTypeOccurrences(userID string, days int) (map[string][]KeyValue, error) {
+func (m AnalyticsModel) Get7DaysBowelTypeOccurrences(userID string, days int) (map[string][]KeyValue, error) {
 	query := fmt.Sprintf(`
 		SELECT
 			EXTRACT(DOW FROM date) AS day_of_week,
@@ -111,7 +111,7 @@ type KeyValue struct {
 	Value int         `json:"value"`
 }
 
-func (m AnalyticsModel) GetTagOccurrences(userID string, days int, tagToQuery string) (map[string][]KeyValue, error) {
+func (m AnalyticsModel) Get7DaysTagOccurrences(userID string, days int, tagToQuery string) (map[string][]KeyValue, error) {
 	var query string
 
 	if tagToQuery == "" {
