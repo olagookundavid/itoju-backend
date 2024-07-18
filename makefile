@@ -77,3 +77,9 @@ build/api:
 	env GOOS=linux CGO_ENABLED=0 go build -o bin/${ITOJU_BINARY} ./cmd/main
 	# go build -ldflags='-s' -o=./bin/api ${ITOJU_BINARY} ./cmd/main
 	# GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/api ./cmd/api
+
+## build/docker: build the docker application 
+.PHONY: build/docker 
+build/docker: build/api
+	@echo 'Building docker...' 
+	docker build -t itojuapp . 
