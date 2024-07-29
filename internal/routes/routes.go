@@ -124,6 +124,10 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodGet, "/v1/user/bowel_year_analytics/:year", app.RequireActivatedAndAuthedUser((app.GetBowelYearAnalytics)))
 	router.Handler(http.MethodGet, "/v1/user/syms_year_analytics/:id/:year", app.RequireActivatedAndAuthedUser((app.GetSymsYearAnalytics)))
 
+	//User Points
+	router.Handler(http.MethodGet, "/v1/user/point", app.RequireActivatedAndAuthedUser((app.GetUserTotalPoints)))
+	router.Handler(http.MethodPost, "/v1/user/point", app.RequireActivatedAndAuthedUser((app.AddUserTotalPoints)))
+
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())
 
