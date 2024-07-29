@@ -81,9 +81,8 @@ func (m AnalyticsModel) GetMonthBowelTypeOccurrences(userID string, month int) (
 		}
 		bowelTypeOccurrences[weekOfMonth] = append(bowelTypeOccurrences[weekOfMonth], KeyValue{Key: typeID, Value: occurrences})
 	}
-	for i := 0; i <= 6; i++ {
+	for i := 1; i <= 5; i++ {
 		if _, exists := bowelTypeOccurrences[i]; !exists {
-			bowelTypeOccurrences[i] = []KeyValue{}
 			bowelTypeOccurrences[i] = []KeyValue{}
 		}
 	}
@@ -226,7 +225,7 @@ func (m AnalyticsModel) GetMonthTagOccurrences(userID string, month int, tagToQu
 		}
 		tagOccurrences[weekOfMonth] = append(tagOccurrences[weekOfMonth], KeyValue{Key: tag, Value: occurrences})
 	}
-	for i := 0; i <= 5; i++ {
+	for i := 1; i <= 5; i++ {
 		if _, exists := tagOccurrences[i]; !exists {
 			tagOccurrences[i] = []KeyValue{}
 		}

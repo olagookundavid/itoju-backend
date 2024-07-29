@@ -33,14 +33,14 @@ db/psql:
 ## db/migrate/up: apply all up database migrations
 .PHONY: db/migrate/up
 db/migrate/up:
-	echo 'Running up migrations...' 
+	echo 'Running up migrations...'
 	@cd internal/sql/migrations/ && goose postgres postgres://itojudb:itojudb@localhost/itojudb up && goose postgres postgres://koyeb-adm:rcHo1Ck7BYmf@ep-tiny-mode-a2d0vyca.eu-central-1.pg.koyeb.app/Itoju-ky up && goose postgres postgres://djjsagev:WG11sRXwe2q1C0I9-3XhTZywTnhbZQPJ@stampy.db.elephantsql.com/djjsagev up
 
 ## db/migrate/down: apply all down database migrations
 .PHONY: db/migrate/down
 db/migrate/down:
 	@echo 'Running down migrations...'
-	goose postgres postgres://itojudb:itojudb@localhost/itojudb down
+	@cd internal/sql/migrations/ && goose postgres postgres://itojudb:itojudb@localhost/itojudb down
 
 # ==================================================================================== # 
 # QUALITY CONTROL 
@@ -83,3 +83,8 @@ build/api:
 build/docker: build/api
 	@echo 'Building docker...' 
 	docker build -t itojuapp . 
+
+.PHONY: run/docker 
+run/docker: build/docker
+	@echo 'Building docker...' 
+	docker run -e DB_URL=postgres://djjsagev:WG11sRXwe2q1C0I9-3XhTZywTnhbZQPJ@stampy.db.elephantsql.com/djjsagev itojuapp

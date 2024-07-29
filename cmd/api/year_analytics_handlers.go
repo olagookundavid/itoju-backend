@@ -94,7 +94,7 @@ func (app *Application) GetTagsYearAnalytics(w http.ResponseWriter, r *http.Requ
 }
 
 func EnsureAllMonthsPresent(metrics map[int]float64) map[int]float64 {
-	for i := 0; i <= 12; i++ {
+	for i := 1; i <= 12; i++ {
 		if _, exists := metrics[i]; !exists {
 			metrics[i] = 0
 		}
