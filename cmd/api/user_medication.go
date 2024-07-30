@@ -129,6 +129,9 @@ func (app *Application) CreateMedicationMetric(w http.ResponseWriter, r *http.Re
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+	app.Background(func() {
+		_ = app.Models.UserPoint.InsertPoint(user.ID, "Medication", 2)
+	})
 	env := envelope{
 		"message": "Successfully Created User Medication Metrics!",
 	}

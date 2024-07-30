@@ -51,6 +51,9 @@ func (app *Application) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+	app.Background(func() {
+		_ = app.Models.UserPoint.InsertPoint(token.UserID, "Login", 5)
+	})
 	// Encode the token to JSON and send it in the response along with a 201 Created // status code.
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "Successfully logged in User", "data": token}, nil)
 	if err != nil {

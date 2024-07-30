@@ -53,7 +53,7 @@ func (m UserPointModel) GetUserTotalPoints(userId string, sendDayResult chan<- i
 	sendMonthResult <- *userMonthPoint
 }
 
-func (m UserPointModel) InsertPoint(userId string, point int64) error {
+func (m UserPointModel) InsertPoint(userId, scope string, point int64) error {
 
 	tx, err := m.DB.Begin()
 	if err != nil {
@@ -77,8 +77,8 @@ func (m UserPointModel) InsertPoint(userId string, point int64) error {
     tot_point = user_point.tot_point + EXCLUDED.tot_point;
 `
 	userRecordQuery := `
-	INSERT INTO user_point_record (user_id, point)
-	VALUES ($1, $2);
+	INSERT INTO user_point_record (user_id, point, scope)
+	VALUES ($1, $2, $3);
 `
 
 	args := []any{userId, point}
@@ -88,23 +88,23 @@ func (m UserPointModel) InsertPoint(userId string, point int64) error {
 	if err != nil {
 		return err
 	}
-
+	args = append(args, scope)
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	_, err = tx.ExecContext(ctx, userRecordQuery)
+	_, err = tx.ExecContext(ctx, userRecordQuery, args...)
 	if err != nil {
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return errors.New("could add user point")
+		return errors.New("couldn't add user point")
 	}
 	return nil
 }
 
 func (m UserPointModel) DeletePointRecordMoreThanWeek() error {
-	query := ` DELETE FROM tokens WHERE tokens.expiry < NOW()`
+	query := `DELETE FROM user_point_record WHERE date < CURRENT_DATE - INTERVAL '7 days'`
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query)

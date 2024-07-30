@@ -63,6 +63,10 @@ func (app *Application) RegisterUserHandler(w http.ResponseWriter, r *http.Reque
 	// 		app.logger.PrintError(err, nil)
 	// 	}
 	// })
+
+	app.Background(func() {
+		_ = app.Models.UserPoint.InsertPoint(user.ID, "Register", 10)
+	})
 	err = app.writeJSON(w, http.StatusCreated, envelope{
 		"message": "Successful Registered User",
 		"user":    user}, nil)

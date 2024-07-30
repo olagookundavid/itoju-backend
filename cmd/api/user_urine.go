@@ -128,6 +128,9 @@ func (app *Application) CreateUrineMetric(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+	app.Background(func() {
+		_ = app.Models.UserPoint.InsertPoint(user.ID, "Urine", 2)
+	})
 	env := envelope{
 		"message": "Successfully Created User Urine Metrics!",
 	}
