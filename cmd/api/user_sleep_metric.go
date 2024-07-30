@@ -185,6 +185,10 @@ func (app *Application) CreateSleepMetric(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+
+	app.Background(func() {
+		_ = app.Models.UserPoint.InsertPoint(user.ID, "Sleep", 2)
+	})
 	env := envelope{
 		"message": "Successfully Created User Sleep Metrics!",
 	}

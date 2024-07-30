@@ -73,6 +73,9 @@ func (app *Application) CreateExerciseMetric(w http.ResponseWriter, r *http.Requ
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+	app.Background(func() {
+		_ = app.Models.UserPoint.InsertPoint(user.ID, "Exercise", 2)
+	})
 	env := envelope{
 		"message": "Successfully Created Exercise Metrics!",
 	}

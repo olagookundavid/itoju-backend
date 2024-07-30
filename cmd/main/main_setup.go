@@ -109,9 +109,9 @@ func cronJob(app *api.Application) {
 			return
 		}
 	})
-	_, err = c.AddFunc("@weekly", func() {
+	_, err = c.AddFunc("@daily", func() {
 		app.Logger.PrintInfo("Deleting Over 1 week Points", nil)
-		err := app.Models.Tokens.DeleteAllExpiredTokens()
+		err := app.Models.UserPoint.DeletePointRecordMoreThanWeek()
 		if err != nil {
 			app.Logger.PrintError(err, map[string]string{"error": "An error occured with deleting from points records table"})
 			return

@@ -181,6 +181,9 @@ func (app *Application) UpdateUserFoodMetrics(w http.ResponseWriter, r *http.Req
 				app.serverErrorResponse(w, r, err)
 				return
 			}
+			app.Background(func() {
+				_ = app.Models.UserPoint.InsertPoint(user.ID, "Food", 2)
+			})
 			env := envelope{
 				"message": "Successfully updated User Food Metrics!",
 			}
