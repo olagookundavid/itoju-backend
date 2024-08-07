@@ -16,6 +16,7 @@ func (app *Application) contextSetUser(r *http.Request, user *models.User) *http
 	ctx := context.WithValue(r.Context(), userContextKey, user)
 	return r.WithContext(ctx)
 }
+
 func (app *Application) contextSetTokenStatus(r *http.Request, status bool) *http.Request {
 	ctx := context.WithValue(r.Context(), statusContextKey, status)
 	return r.WithContext(ctx)

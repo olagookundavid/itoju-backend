@@ -192,14 +192,3 @@ func (app *Application) ChangeUserPasswordHandler(w http.ResponseWriter, r *http
 		app.serverErrorResponse(w, r, err)
 	}
 }
-
-func (app *Application) GetUserProfileHandler(w http.ResponseWriter, r *http.Request) {
-	user := app.contextGetUser(r)
-	env := envelope{
-		"message": "Retrieved User Profile",
-		"user":    user}
-	err := app.writeJSON(w, http.StatusOK, env, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}
