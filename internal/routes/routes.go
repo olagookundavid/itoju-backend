@@ -25,6 +25,7 @@ func Routes(app *api.Application) http.Handler {
 
 	//Profile
 	router.Handler(http.MethodGet, "/v1/users/profile", app.RequireActivatedAndAuthedUser(app.GetUserProfileHandler))
+	router.Handler(http.MethodPut, "/v1/users/profile_pic", app.RequireActivatedAndAuthedUser(app.UpdateUserProfilePicHandler))
 
 	//User tracked metrics
 	router.Handler(http.MethodPost, "/v1/user/metrics", app.RequireActivatedAndAuthedUser(app.SetUserMetrics))
