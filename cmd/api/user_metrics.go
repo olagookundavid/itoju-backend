@@ -19,19 +19,26 @@ func (app *Application) SetUserMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 	user := app.contextGetUser(r)
 
-	err = app.Models.Metrics.SetUserMetrics(input.Metrics, user.ID)
-
+	tx, err := app.Models.Transaction.BeginTx()
 	if err != nil {
-		switch {
-		case errors.Is(err, models.ErrRecordAlreadyExist):
-			app.failedValidationResponse(w, r,
-				map[string]string{
-					"Metrics": "Already exists"},
-			)
-		default:
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
 			app.serverErrorResponse(w, r, err)
 		}
-		return
+	}()
+
+	for i := 0; i < len(input.Metrics); i++ {
+		_ = app.Models.Metrics.SetUserMetrics(tx, input.Metrics[i], user.ID)
 	}
 
 	env := envelope{
@@ -94,7 +101,28 @@ func (app *Application) DeleteUserTrackedMetrics(w http.ResponseWriter, r *http.
 
 	user := app.contextGetUser(r)
 
-	err = app.Models.Metrics.DeleteUserMetrics(user.ID, input.Metrics)
+	tx, err := app.Models.Transaction.BeginTx()
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+		}
+	}()
+
+	for i := 0; i < len(input.Metrics); i++ {
+		_ = app.Models.Metrics.DeleteUserMetrics(tx, user.ID, input.Metrics[i])
+	}
+
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrRecordNotFound):

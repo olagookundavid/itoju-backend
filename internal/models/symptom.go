@@ -3,9 +3,9 @@ package models
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/olagookundavid/itoju/internal/jsonlog"
@@ -73,62 +73,37 @@ func (m SymptomsModel) GetUserSymptoms(userID string) ([]*Symptoms, error) {
 	return symptoms, nil
 }
 
-func (m SymptomsModel) SetUserSymptoms(selectedSymptoms []int, userID string) error {
+func (m SymptomsModel) SetUserSymptoms(tx *sql.Tx, symID int, userID string) error {
 
-	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
 	query := ` INSERT INTO user_symptoms (user_id, symptoms_id) VALUES ($1, $2)`
 
-	for _, symID := range selectedSymptoms {
-		wg.Add(1)
-		go func(symID int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			defer wg.Done()
-			defer func() {
-				if err := recover(); err != nil {
-					logger.PrintError(fmt.Errorf("%s", err), nil)
-				}
-			}()
-			_, err := m.DB.ExecContext(ctx, query, userID, symID)
-			if err != nil {
-				return
-			}
-		}(symID)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := tx.ExecContext(ctx, query, userID, symID)
+	if err != nil {
+		logger.PrintError(fmt.Errorf("symptom error  %s", err), nil)
+		return errors.New("couldn't Add New Symptoms")
 	}
-
-	wg.Wait()
 	return nil
 
 }
 
-func (m SymptomsModel) DeleteUserSymptoms(userId string, selectedSymptoms []int) error {
-	wg := sync.WaitGroup{}
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+func (m SymptomsModel) DeleteUserSymptoms(tx *sql.Tx, userId string, symptomsID int) error {
 
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 	query := ` DELETE FROM user_symptoms
 	WHERE user_id = $1
 	AND symptoms_id = $2; `
 
-	for _, symptomsID := range selectedSymptoms {
-		wg.Add(1)
-		go func(symptomsID int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			defer wg.Done()
-			defer func() {
-				if err := recover(); err != nil {
-					logger.PrintError(fmt.Errorf("%s", err), nil)
-				}
-			}()
-			_, err := m.DB.ExecContext(ctx, query, userId, symptomsID)
-			if err != nil {
-				return
-			}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-		}(symptomsID)
+	_, err := tx.ExecContext(ctx, query, userId, symptomsID)
+	if err != nil {
+		logger.PrintError(fmt.Errorf("symptom error  %s", err), nil)
+		return errors.New("couldn't Delete Symptoms")
 	}
-	wg.Wait()
+
 	return nil
 }

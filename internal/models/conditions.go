@@ -3,9 +3,9 @@ package models
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/olagookundavid/itoju/internal/jsonlog"
@@ -73,66 +73,41 @@ func (m ConditionsModel) GetUserConditions(userID string) ([]*Conditions, error)
 	return conditions, nil
 }
 
-func (m ConditionsModel) SetUserConditions(selectedConditions []int, userID string) error {
+func (m ConditionsModel) SetUserConditions(tx *sql.Tx, conditionID int, userID string) error {
 
-	wg := sync.WaitGroup{}
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-	// ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	// defer cancel()
+
 	query := ` INSERT INTO user_conditions (user_id, conditions_id) VALUES ($1, $2)`
 
-	for _, conditionID := range selectedConditions {
-		wg.Add(1)
-		go func(conditionID int) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			defer wg.Done()
-			defer func() {
-				if err := recover(); err != nil {
-					logger.PrintError(fmt.Errorf("%s", err), nil)
-				}
-			}()
-			_, err := m.DB.ExecContext(ctx, query, userID, conditionID)
+	_, err := tx.ExecContext(ctx, query, userID, conditionID)
 
-			if err != nil {
-				return
-			}
-		}(conditionID)
+	if err != nil {
+
+		logger.PrintError(fmt.Errorf("condition error  %s", err), nil)
+		return errors.New("could Add User Condition")
 	}
-	wg.Wait()
 	return nil
 
 }
 
-func (m ConditionsModel) DeleteUserConditions(userId string, selectedConditions []int) error {
-	wg := sync.WaitGroup{}
+func (m ConditionsModel) DeleteUserConditions(tx *sql.Tx, userId string, conditionID int) error {
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	query := ` DELETE FROM user_conditions
 	WHERE user_id = $1
 	AND conditions_id = $2; `
-	// ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	// defer cancel()
 
-	for _, symptomsID := range selectedConditions {
-		wg.Add(1)
-		go func(conditionsID int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			defer wg.Done()
-			defer func() {
-				if err := recover(); err != nil {
-					logger.PrintError(fmt.Errorf("%s", err), nil)
-				}
-			}()
-			_, err := m.DB.ExecContext(ctx, query, userId, conditionsID)
-			if err != nil {
-				logger.PrintError(fmt.Errorf("condition error  %s", err), nil)
-				return
-			}
-		}(symptomsID)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := tx.ExecContext(ctx, query, userId, conditionID)
+	if err != nil {
+		logger.PrintError(fmt.Errorf("condition error  %s", err), nil)
+		return errors.New("could delete User Condition")
 	}
-	wg.Wait()
+
 	return nil
 }

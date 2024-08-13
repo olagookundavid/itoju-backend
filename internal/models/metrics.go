@@ -3,9 +3,9 @@ package models
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/olagookundavid/itoju/internal/jsonlog"
@@ -21,30 +21,40 @@ type MetricsModel struct {
 }
 
 // unique issue on user_metrics table, also how to do this well
-func (m MetricsModel) SetUserMetrics(selectedMetrics []int, userID string) error {
-	wg := sync.WaitGroup{}
+
+func (m MetricsModel) SetUserMetrics(tx *sql.Tx, metricID int, userID string) error {
+
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 	query := ` INSERT INTO user_trackedmetric (user_id, metric_id) VALUES ($1, $2)`
+	//TODO: change to TX
 
-	for _, metricID := range selectedMetrics {
-		wg.Add(1)
-		go func(metricID int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			defer wg.Done()
-			defer func() {
-				if err := recover(); err != nil {
-					logger.PrintError(fmt.Errorf("%s", err), nil)
-				}
-			}()
-			_, err := m.DB.ExecContext(ctx, query, userID, metricID)
-			if err != nil {
-				logger.PrintError(fmt.Errorf("metric error  %s", err), nil)
-				return
-			}
-		}(metricID)
+	// for _, metricID := range selectedMetrics {
+	// 	wg.Add(1)
+	// 	go func(metricID int) {
+	// 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	// 		defer cancel()
+	// 		defer wg.Done()
+	// 		defer func() {
+	// 			if err := recover(); err != nil {
+	// 				logger.PrintError(fmt.Errorf("%s", err), nil)
+	// 			}
+	// 		}()
+	// 		_, err := m.DB.ExecContext(ctx, query, userID, metricID)
+	// 		if err != nil {
+	// 			logger.PrintError(fmt.Errorf("metric error  %s", err), nil)
+	// 			return
+	// 		}
+	// 	}(metricID)
+	// }
+	// wg.Wait()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := tx.ExecContext(ctx, query, userID, metricID)
+	if err != nil {
+		logger.PrintError(fmt.Errorf("metric error  %s", err), nil)
+		return errors.New("could Add User Metric")
 	}
-	wg.Wait()
 	return nil
 
 }
@@ -102,32 +112,22 @@ func (m MetricsModel) GetUserMetrics(userID string) ([]*Metrics, error) {
 	return metrics, nil
 }
 
-func (m MetricsModel) DeleteUserMetrics(userId string, selectedMetrics []int) error {
-	wg := sync.WaitGroup{}
+func (m MetricsModel) DeleteUserMetrics(tx *sql.Tx, userId string, metricID int) error {
+
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	query := ` DELETE FROM user_trackedmetric
 	WHERE user_id = $1
 	AND metric_id = $2; `
-	for _, metricID := range selectedMetrics {
 
-		wg.Add(1)
-		go func(metricID int) {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			defer cancel()
-			defer wg.Done()
-			defer func() {
-				if err := recover(); err != nil {
-					logger.PrintError(fmt.Errorf("%s", err), nil)
-				}
-			}()
-			_, err := m.DB.ExecContext(ctx, query, userId, metricID)
-			if err != nil {
-				return
-			}
-		}(metricID)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := tx.ExecContext(ctx, query, userId, metricID)
+	if err != nil {
+
+		logger.PrintError(fmt.Errorf("metric error  %s", err), nil)
+		return errors.New("could Delete User Metric")
 	}
-
-	wg.Wait()
 	return nil
 }

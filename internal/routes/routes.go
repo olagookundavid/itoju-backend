@@ -129,6 +129,9 @@ func Routes(app *api.Application) http.Handler {
 	router.Handler(http.MethodGet, "/v1/user/point", app.RequireActivatedAndAuthedUser((app.GetUserTotalPoints)))
 	router.Handler(http.MethodPost, "/v1/user/point", app.RequireActivatedAndAuthedUser((app.AddUserTotalPoints)))
 
+	//Period
+	router.Handler(http.MethodPost, "/v1/user/period", app.RequireActivatedAndAuthedUser((app.AddMenstrualCycle)))
+
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())
 

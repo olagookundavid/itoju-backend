@@ -1,10 +1,7 @@
 package api
 
 import (
-	"errors"
 	"net/http"
-
-	"github.com/olagookundavid/itoju/internal/models"
 )
 
 func (app *Application) GetSymptoms(w http.ResponseWriter, r *http.Request) {
@@ -54,20 +51,26 @@ func (app *Application) InsertUserSymptoms(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	user := app.contextGetUser(r)
-
-	err = app.Models.Symptoms.SetUserSymptoms(input.Symptoms, user.ID)
-
+	tx, err := app.Models.Transaction.BeginTx()
 	if err != nil {
-		switch {
-		case errors.Is(err, models.ErrRecordAlreadyExist):
-			app.failedValidationResponse(w, r,
-				map[string]string{
-					"Symptoms": "Already exists"},
-			)
-		default:
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
 			app.serverErrorResponse(w, r, err)
 		}
-		return
+	}()
+
+	for i := 0; i < len(input.Symptoms); i++ {
+		_ = app.Models.Symptoms.SetUserSymptoms(tx, input.Symptoms[i], user.ID)
 	}
 
 	env := envelope{
@@ -82,7 +85,7 @@ func (app *Application) InsertUserSymptoms(w http.ResponseWriter, r *http.Reques
 
 func (app *Application) DeleteUserSymptoms(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Metrics []int `json:"symptoms"`
+		Symptoms []int `json:"symptoms"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -92,15 +95,26 @@ func (app *Application) DeleteUserSymptoms(w http.ResponseWriter, r *http.Reques
 	}
 
 	user := app.contextGetUser(r)
-	err = app.Models.Symptoms.DeleteUserSymptoms(user.ID, input.Metrics)
+	tx, err := app.Models.Transaction.BeginTx()
 	if err != nil {
-		switch {
-		case errors.Is(err, models.ErrRecordNotFound):
-			app.NotFoundResponse(w, r)
-		default:
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
 			app.serverErrorResponse(w, r, err)
 		}
-		return
+	}()
+
+	for i := 0; i < len(input.Symptoms); i++ {
+		_ = app.Models.Symptoms.DeleteUserSymptoms(tx, user.ID, input.Symptoms[i])
 	}
 	env := envelope{
 		"message": "Deleted Symptoms for User"}
