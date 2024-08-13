@@ -1,10 +1,7 @@
 package api
 
 import (
-	"errors"
 	"net/http"
-
-	"github.com/olagookundavid/itoju/internal/models"
 )
 
 func (app *Application) GetConditions(w http.ResponseWriter, r *http.Request) {
@@ -54,20 +51,28 @@ func (app *Application) InsertUserConditions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	user := app.contextGetUser(r)
-	err = app.Models.Conditions.SetUserConditions(input.Conditions, user.ID)
-
+	tx, err := app.Models.Transaction.BeginTx()
 	if err != nil {
-		switch {
-		case errors.Is(err, models.ErrRecordAlreadyExist):
-			app.failedValidationResponse(w, r,
-				map[string]string{
-					"Conditions": "Already exists"},
-			)
-		default:
-			app.serverErrorResponse(w, r, err)
-		}
+		app.serverErrorResponse(w, r, err)
 		return
 	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+		}
+	}()
+
+	for i := 0; i < len(input.Conditions); i++ {
+		_ = app.Models.Conditions.SetUserConditions(tx, input.Conditions[i], user.ID)
+	}
+
 	env := envelope{
 		"message": "Successfully added User Conditions",
 	}
@@ -80,7 +85,7 @@ func (app *Application) InsertUserConditions(w http.ResponseWriter, r *http.Requ
 
 func (app *Application) DeleteUserConditions(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Metrics []int `json:"conditions"`
+		Conditions []int `json:"conditions"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -91,15 +96,26 @@ func (app *Application) DeleteUserConditions(w http.ResponseWriter, r *http.Requ
 
 	user := app.contextGetUser(r)
 
-	err = app.Models.Conditions.DeleteUserConditions(user.ID, input.Metrics)
+	tx, err := app.Models.Transaction.BeginTx()
 	if err != nil {
-		switch {
-		case errors.Is(err, models.ErrRecordNotFound):
-			app.NotFoundResponse(w, r)
-		default:
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
 			app.serverErrorResponse(w, r, err)
 		}
-		return
+	}()
+
+	for i := 0; i < len(input.Conditions); i++ {
+		_ = app.Models.Conditions.DeleteUserConditions(tx, user.ID, input.Conditions[i])
 	}
 
 	env := envelope{

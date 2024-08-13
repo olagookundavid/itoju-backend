@@ -30,6 +30,8 @@ type Models struct {
 	MedicationMetric MedicationMetricModel
 	AnalyticsMetric  AnalyticsModel
 	UserPoint        UserPointModel
+	UserPeriod       UserPeriodModel
+	Transaction      TransactionModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -52,5 +54,7 @@ func NewModels(db *sql.DB) Models {
 		MedicationMetric: MedicationMetricModel{DB: db},
 		AnalyticsMetric:  AnalyticsModel{DB: db},
 		UserPoint:        UserPointModel{DB: db},
+		UserPeriod:       UserPeriodModel{DB: db},
+		Transaction:      TransactionModel{DB: db},
 	}
 }

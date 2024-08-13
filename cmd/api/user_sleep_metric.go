@@ -3,22 +3,15 @@ package api
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/olagookundavid/itoju/internal/models"
 )
 
 func (app *Application) GetUserSleepMetrics(w http.ResponseWriter, r *http.Request) {
 
-	dateString, err := app.readStringParam(r, "date")
+	date, err := app.GetDate(r)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-	// Parse the date string into a time.Time object
-	date, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid date format"))
 		return
 	}
 	user := app.contextGetUser(r)

@@ -32,8 +32,8 @@ func (app *Application) UpdateUserProfilePicHandler(w http.ResponseWriter, r *ht
 		return
 	}
 	user := app.contextGetUser(r)
-	println(user.PicNo, input.Pic_no)
 	user.PicNo = input.Pic_no
+
 	err = app.Models.Users.Update(user)
 	if err != nil {
 		switch {
