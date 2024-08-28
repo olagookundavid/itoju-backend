@@ -134,7 +134,7 @@ func (app *Application) AddMenstrualCycle(w http.ResponseWriter, r *http.Request
 	}
 
 	env := envelope{
-		"message": "Success",
+		"message": "Successful Created User Cycle",
 	}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
@@ -160,12 +160,12 @@ func (app *Application) UpdateMenstrualCycle(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	var input struct {
-		IsPeriod    *bool    `json:"is_period"`
-		IsOvulation *bool    `json:"is_ovulation"`
-		Flow        *float32 `json:"flow"`
-		Pain        *float32 `json:"pain"`
-		Tags        []string `json:"tags"`
-		CMQ         *string  `json:"cmq"`
+		IsPeriod    *bool     `json:"is_period"`
+		IsOvulation *bool     `json:"is_ovulation"`
+		Flow        *float32  `json:"flow"`
+		Pain        *float32  `json:"pain"`
+		Tags        *[]string `json:"tags"`
+		CMQ         *string   `json:"cmq"`
 	}
 	err = app.readJSON(w, r, &input)
 	if err != nil {
@@ -185,10 +185,10 @@ func (app *Application) UpdateMenstrualCycle(w http.ResponseWriter, r *http.Requ
 		cycleDay.IsPeriod = *input.IsPeriod
 	}
 	if input.CMQ != nil {
-		cycleDay.IsOvulation = *input.IsOvulation
+		cycleDay.CMQ = *input.CMQ
 	}
 	if input.Tags != nil {
-		cycleDay.IsPeriod = *input.IsPeriod
+		cycleDay.Tags = *input.Tags
 	}
 
 	err = app.Models.UserPeriod.UpdateCycleDay(cycleDay)
