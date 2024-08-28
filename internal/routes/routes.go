@@ -131,6 +131,9 @@ func Routes(app *api.Application) http.Handler {
 
 	//Period
 	router.Handler(http.MethodPost, "/v1/user/period", app.RequireActivatedAndAuthedUser((app.AddMenstrualCycle)))
+	router.Handler(http.MethodGet, "/v1/user/period", app.RequireActivatedAndAuthedUser((app.GetMenstrualCycle)))
+	router.Handler(http.MethodGet, "/v1/user/cycle_day/:id", app.RequireActivatedAndAuthedUser((app.GetCycleDay)))
+	router.Handler(http.MethodPut, "/v1/user/period/:id", app.RequireActivatedAndAuthedUser((app.UpdateMenstrualCycle)))
 
 	//Metrics
 	router.Handler(http.MethodGet, "/v1/debug/vars", expvar.Handler())

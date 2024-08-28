@@ -4,7 +4,55 @@ import (
 	"errors"
 	"net/http"
 	"time"
+
+	"github.com/olagookundavid/itoju/internal/models"
 )
+
+func (app *Application) GetMenstrualCycle(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+	id, err := app.Models.UserPeriod.GetMensesCycleId(user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	periodDays, err := app.Models.UserPeriod.GetCycleDays(id, user.ID)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	env := envelope{
+		"message":     "Retrieved All Period data",
+		"period_days": periodDays}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) GetCycleDay(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readStringParam(r, "id")
+	if err != nil {
+		app.NotFoundResponse(w, r)
+		return
+	}
+	periodDay, err := app.Models.UserPeriod.GetCycleDay(id)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	env := envelope{
+		"message":    "Retrieved Period data",
+		"period_day": periodDay}
+
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
 
 func (app *Application) AddMenstrualCycle(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
@@ -36,7 +84,6 @@ func (app *Application) AddMenstrualCycle(w http.ResponseWriter, r *http.Request
 	defer func() {
 		if err != nil {
 			tx.Rollback()
-			app.serverErrorResponse(w, r, err)
 			return
 		}
 		err = tx.Commit()
@@ -55,28 +102,108 @@ func (app *Application) AddMenstrualCycle(w http.ResponseWriter, r *http.Request
 
 	cycleID, err := app.Models.UserPeriod.InsertMenstrualCycleTx(tx, &cycle)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, models.ErrRecordAlreadyExist):
+			app.recordAlreadyExistsResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
-	// Example: Adding cycle days based on the cycle within the same transaction
-	for i := 0; i < input.PeriodLength; i++ {
-		day := app.Models.UserPeriod.ReturnCycleDay(cycleID, false, false, cycle.StartDate.AddDate(0, 0, i))
-		// day := models.CycleDay{
-		// 	CycleID:     cycleID,
-		// 	Date:        cycle.StartDate.AddDate(0, 0, i),
-		// 	IsPeriod:    true,
-		// 	IsOvulation: false,
-		// 	Flow:        3, // Example flow level
-		// 	Pain:        2, // Example pain level
-		// 	Tags:        []string{"cramps"},
-		// 	CMQ:         "Sticky",
-		// }
-		_ = app.Models.UserPeriod.InsertCycleDayTx(tx, &day)
-
+	// Insert cycle days
+	for i := 0; i < input.CycleLength; i++ {
+		day := app.Models.UserPeriod.ReturnCycleDay(cycleID, user.ID, true, false, cycle.StartDate.AddDate(0, 0, i))
+		if err := app.Models.UserPeriod.InsertCycleDayTx(tx, &day); err != nil {
+			return
+		}
 	}
+	// Insert regular days
+	// for i := input.CycleLength; i < (input.CycleLength + 9); i++ {
+	// 	day := app.Models.UserPeriod.ReturnCycleDay(cycleID, user.ID, false, false, cycle.StartDate.AddDate(0, 0, i))
+	// 	if err := app.Models.UserPeriod.InsertCycleDayTx(tx, &day); err != nil {
+	// 		return
+	// 	}
+	// }
+	// Insert ovulation days
+	for i := (input.CycleLength + 9); i < (input.PeriodLength); i++ {
+		day := app.Models.UserPeriod.ReturnCycleDay(cycleID, user.ID, false, true, cycle.StartDate.AddDate(0, 0, i))
+		if err := app.Models.UserPeriod.InsertCycleDayTx(tx, &day); err != nil {
+			return
+		}
+	}
+
 	env := envelope{
 		"message": "Success",
+	}
+	err = app.writeJSON(w, http.StatusOK, env, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *Application) UpdateMenstrualCycle(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readStringParam(r, "id")
+	if err != nil {
+		app.NotFoundResponse(w, r)
+		return
+	}
+
+	cycleDay, err := app.Models.UserPeriod.GetCycleDay(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrRecordNotFound):
+			app.NotFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	var input struct {
+		IsPeriod    *bool    `json:"is_period"`
+		IsOvulation *bool    `json:"is_ovulation"`
+		Flow        *float32 `json:"flow"`
+		Pain        *float32 `json:"pain"`
+		Tags        []string `json:"tags"`
+		CMQ         *string  `json:"cmq"`
+	}
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	if input.Pain != nil {
+		cycleDay.Pain = *input.Pain
+	}
+	if input.Flow != nil {
+		cycleDay.Flow = *input.Flow
+	}
+	if input.IsOvulation != nil {
+		cycleDay.IsOvulation = *input.IsOvulation
+	}
+	if input.IsPeriod != nil {
+		cycleDay.IsPeriod = *input.IsPeriod
+	}
+	if input.CMQ != nil {
+		cycleDay.IsOvulation = *input.IsOvulation
+	}
+	if input.Tags != nil {
+		cycleDay.IsPeriod = *input.IsPeriod
+	}
+
+	err = app.Models.UserPeriod.UpdateCycleDay(cycleDay)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+	env := envelope{
+		"message":  "Successfully updated Cycle Day",
+		"cycleDay": cycleDay,
 	}
 	err = app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {

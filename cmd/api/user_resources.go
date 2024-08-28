@@ -114,8 +114,6 @@ func (app *Application) UpdateResources(w http.ResponseWriter, r *http.Request) 
 		switch {
 		case errors.Is(err, models.ErrEditConflict):
 			app.editConflictResponse(w, r)
-		case errors.Is(err, models.ErrRecordAlreadyExist):
-			app.recordAlreadyExistsResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
 		}

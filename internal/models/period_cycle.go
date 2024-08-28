@@ -3,13 +3,14 @@ package models
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
 )
 
 type MenstrualCycle struct {
-	ID           int       `json:"id"`
+	ID           string    `json:"id"`
 	UserID       string    `json:"user_id"`
 	StartDate    time.Time `json:"start_date"`
 	CycleLength  int       `json:"cycle_length"`
@@ -17,13 +18,14 @@ type MenstrualCycle struct {
 }
 
 type CycleDay struct {
-	ID          int       `json:"id"`
-	CycleID     int       `json:"cycle_id"`
+	ID          string    `json:"id"`
+	CycleID     string    `json:"cycle_id"`
+	UserID      string    `json:"-"`
 	Date        time.Time `json:"date"`
 	IsPeriod    bool      `json:"is_period"`
 	IsOvulation bool      `json:"is_ovulation"`
-	Flow        int       `json:"flow"`
-	Pain        int       `json:"pain"`
+	Flow        float32   `json:"flow"`
+	Pain        float32   `json:"pain"`
 	Tags        []string  `json:"tags"`
 	CMQ         string    `json:"cmq"`
 }
@@ -38,9 +40,9 @@ func (m *UserPeriodModel) ReturnMenstrualCycle(userID string, cycleLength, perio
 	}
 }
 
-func (m *UserPeriodModel) ReturnCycleDay(cycleID int, isPeriod, isOvulation bool, date time.Time) CycleDay {
+func (m *UserPeriodModel) ReturnCycleDay(cycleID, userID string, isPeriod, isOvulation bool, date time.Time) CycleDay {
 	return CycleDay{
-		CycleID: cycleID, IsPeriod: isPeriod, IsOvulation: isOvulation, Date: date,
+		CycleID: cycleID, UserID: userID, IsPeriod: isPeriod, IsOvulation: isOvulation, Date: date, CMQ: "", Tags: []string{},
 	}
 }
 
@@ -49,30 +51,6 @@ func (m *UserPeriodModel) ReturnCycleDay(cycleID int, isPeriod, isOvulation bool
 // 		CMQ: CMQ, CycleID: cycleID, Flow: flow, Pain: pain, IsPeriod: isPeriod, IsOvulation: isOvulation, Date: date,
 // 	}
 // }
-
-func (m *UserPeriodModel) InsertMenstrualCycle(cycle *MenstrualCycle) (int, error) {
-	query := `INSERT INTO menstrual_cycles (user_id, start_date, cycle_length, period_length)
-              VALUES ($1, $2, $3, $4) RETURNING id`
-
-	var id int
-	err := m.DB.QueryRow(query, cycle.UserID, cycle.StartDate, cycle.CycleLength, cycle.PeriodLength).Scan(&id)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
-
-func (m *UserPeriodModel) InsertCycleDay(day *CycleDay) (int, error) {
-	query := `INSERT INTO cycles_days (cycle_id, date, is_period, is_ovulation, flow, pain, tags, cmq)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-
-	var id int
-	err := m.DB.QueryRow(query, day.CycleID, day.Date, day.IsPeriod, day.IsOvulation, day.Flow, day.Pain, pq.Array(day.Tags), day.CMQ).Scan(&id)
-	if err != nil {
-		return 0, err
-	}
-	return id, nil
-}
 
 func (m *UserPeriodModel) GetMenstrualCycles(userID string) ([]MenstrualCycle, error) {
 	query := `SELECT id, user_id, start_date, cycle_length, period_length
@@ -96,11 +74,16 @@ func (m *UserPeriodModel) GetMenstrualCycles(userID string) ([]MenstrualCycle, e
 	return cycles, nil
 }
 
-func (m *UserPeriodModel) GetCycleDays(cycleID int) ([]CycleDay, error) {
-	query := `SELECT id, cycle_id, date, is_period, is_ovulation, flow, pain, tags, cmq
-              FROM cycles_days WHERE cycle_id = $1 ORDER BY date ASC`
+func (m *UserPeriodModel) GetCycleDays(cycleID, userID string) ([]CycleDay, error) {
 
-	rows, err := m.DB.Query(query, cycleID)
+	if cycleID == "" {
+		return []CycleDay{}, nil
+	}
+
+	query := `SELECT id, cycle_id, date, is_period, is_ovulation, flow, pain, tags, cmq
+              FROM cycles_days WHERE cycle_id = $1 AND user_id = $2 ORDER BY date ASC`
+
+	rows, err := m.DB.Query(query, cycleID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -115,33 +98,116 @@ func (m *UserPeriodModel) GetCycleDays(cycleID int) ([]CycleDay, error) {
 		}
 		days = append(days, day)
 	}
+	if days == nil {
+		days = []CycleDay{}
+	}
 	return days, nil
 }
 
-func (m *UserPeriodModel) InsertMenstrualCycleTx(tx *sql.Tx, cycle *MenstrualCycle) (int, error) {
+func (m *UserPeriodModel) InsertMenstrualCycleTx(tx *sql.Tx, cycle *MenstrualCycle) (string, error) {
 	query := `INSERT INTO menstrual_cycles (user_id, start_date, cycle_length, period_length, created_at)
               VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	var id int
+	var id string
 	err := tx.QueryRowContext(ctx, query, cycle.UserID, cycle.StartDate, cycle.CycleLength, cycle.PeriodLength, time.Now()).Scan(&id)
 	if err != nil {
-		return 0, err
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "menstrual_cycles_start_date_key"`:
+			return "", ErrRecordAlreadyExist
+		default:
+			return "", err
+		}
 	}
 	return id, nil
 }
 
 func (m *UserPeriodModel) InsertCycleDayTx(tx *sql.Tx, day *CycleDay) error {
-	query := `INSERT INTO cycles_days (cycle_id, date, is_period, is_ovulation, flow, pain, tags, cmq, created_at)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	query := `INSERT INTO cycles_days (cycle_id, user_id, date, is_period, is_ovulation, flow, pain, tags, cmq, created_at)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := tx.ExecContext(ctx, query, day.CycleID, day.Date, day.IsPeriod, day.IsOvulation, day.Flow, day.Pain, pq.Array(day.Tags), day.CMQ, time.Now())
+	_, err := tx.ExecContext(ctx, query, day.CycleID, day.UserID, day.Date, day.IsPeriod, day.IsOvulation, day.Flow, day.Pain, pq.Array(day.Tags), day.CMQ, time.Now())
 	if err != nil {
+
+		print(err.Error())
 		return err
 	}
 	return nil
+}
+
+func (m *UserPeriodModel) UpdateCycleDay(cycleDay *CycleDay) error {
+
+	query := `UPDATE cycles_days SET flow = $1, pain = $2, is_ovulation = $3, is_period = $4, cmq = $5, tags = $6  WHERE id = $7`
+
+	args := []any{cycleDay.Flow, cycleDay.Pain, cycleDay.IsOvulation, cycleDay.IsPeriod, cycleDay.CMQ, pq.Array(cycleDay.Tags), cycleDay.ID}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *UserPeriodModel) GetCycleDay(id string) (*CycleDay, error) {
+	if id == "" {
+		return nil, ErrRecordNotFound
+	}
+	query := ` SELECT id, cycle_id, date, is_period, is_ovulation, flow, pain, tags, cmq FROM cycles_days WHERE id = $1; `
+	var cycleDay CycleDay
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&cycleDay.ID,
+		&cycleDay.CycleID,
+		&cycleDay.Date,
+		&cycleDay.IsPeriod,
+		&cycleDay.IsOvulation,
+		&cycleDay.Flow,
+		&cycleDay.Pain,
+		pq.Array(&cycleDay.Tags),
+		&cycleDay.CMQ,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &cycleDay, nil
+}
+
+func (m *UserPeriodModel) GetMensesCycleId(id string) (string, error) {
+	if id == "" {
+		return "", ErrRecordNotFound
+	}
+	query := ` SELECT id FROM menstrual_cycles WHERE user_id = $1 ORDER BY created_at ASC limit 1 `
+	var cycleDayId string
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&cycleDayId,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return "", nil
+		default:
+			return "", err
+		}
+	}
+	return cycleDayId, nil
 }
