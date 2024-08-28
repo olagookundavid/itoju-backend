@@ -112,21 +112,21 @@ func (app *Application) AddMenstrualCycle(w http.ResponseWriter, r *http.Request
 	}
 
 	// Insert cycle days
-	for i := 0; i < input.CycleLength; i++ {
+	for i := 0; i < input.PeriodLength; i++ {
 		day := app.Models.UserPeriod.ReturnCycleDay(cycleID, user.ID, true, false, cycle.StartDate.AddDate(0, 0, i))
 		if err := app.Models.UserPeriod.InsertCycleDayTx(tx, &day); err != nil {
 			return
 		}
 	}
 	// Insert regular days
-	// for i := input.CycleLength; i < (input.CycleLength + 9); i++ {
+	// for i := input.PeriodLength; i < (input.PeriodLength + 9); i++ {
 	// 	day := app.Models.UserPeriod.ReturnCycleDay(cycleID, user.ID, false, false, cycle.StartDate.AddDate(0, 0, i))
 	// 	if err := app.Models.UserPeriod.InsertCycleDayTx(tx, &day); err != nil {
 	// 		return
 	// 	}
 	// }
 	// Insert ovulation days
-	for i := (input.CycleLength + 9); i < (input.PeriodLength); i++ {
+	for i := (input.PeriodLength + 9); i < (input.CycleLength); i++ {
 		day := app.Models.UserPeriod.ReturnCycleDay(cycleID, user.ID, false, true, cycle.StartDate.AddDate(0, 0, i))
 		if err := app.Models.UserPeriod.InsertCycleDayTx(tx, &day); err != nil {
 			return
