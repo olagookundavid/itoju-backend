@@ -21,10 +21,17 @@ func (app *Application) errorResponse(w http.ResponseWriter, r *http.Request, st
 }
 
 func (app *Application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
-	// app.logError(r, err)
-	print(err.Error())
+	app.logError(r, err)
 	message := "the server encountered a problem and could not process your request"
-	app.errorResponse(w, r, http.StatusInternalServerError, message)
+	env := envelope{
+		"error":    message,
+		"devError": err.Error(),
+	}
+	err = app.writeJSON(w, http.StatusInternalServerError, env, nil)
+	if err != nil {
+		app.logError(r, err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func (app *Application) NotFoundResponse(w http.ResponseWriter, r *http.Request) {

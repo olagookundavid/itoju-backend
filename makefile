@@ -36,6 +36,15 @@ db/migrate/up:
 	echo 'Running up migrations...'
 	@cd internal/sql/migrations/ && goose postgres postgres://itojudb:itojudb@localhost/itojudb up && goose postgres postgres://koyeb-adm:rcHo1Ck7BYmf@ep-tiny-mode-a2d0vyca.eu-central-1.pg.koyeb.app/Itoju-ky up && goose postgres postgres://djjsagev:WG11sRXwe2q1C0I9-3XhTZywTnhbZQPJ@stampy.db.elephantsql.com/djjsagev up
 
+.PHONY: db/migrate/upt
+db/migrate/upt:
+	echo 'Running up migrations...'
+	@cd internal/sql/migrations/ && goose postgres postgres://itojudb:itojudb@localhost/itojudb up 
+.PHONY: db/migrate/downt
+db/migrate/downt:
+	@echo 'Running down migrations...'
+	@cd internal/sql/migrations/ && goose postgres postgres://itojudb:itojudb@localhost/itojudb down
+
 ## db/migrate/down: apply all down database migrations
 .PHONY: db/migrate/down
 db/migrate/down:

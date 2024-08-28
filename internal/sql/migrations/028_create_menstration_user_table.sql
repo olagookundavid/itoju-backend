@@ -1,8 +1,8 @@
 -- +goose Up
 CREATE TABLE menstrual_cycles (
-    id SERIAL PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users ON DELETE CASCADE,
-    start_date DATE NOT NULL,
+    start_date DATE UNIQUE NOT NULL,
     cycle_length SMALLINT DEFAULT 28,
     period_length SMALLINT DEFAULT 5,
     created_at TIMESTAMP DEFAULT NOW()
