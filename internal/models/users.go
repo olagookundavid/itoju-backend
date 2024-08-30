@@ -22,6 +22,7 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  password  `json:"-"`
 	Activated bool      `json:"activated"`
+	IsAdmin   bool      `json:"is_admin"`
 	PicNo     int       `json:"pic_no"`
 	Version   int       `json:"-"`
 }
@@ -111,7 +112,7 @@ func (m UserModel) Insert(user *User) error {
 }
 
 func (m UserModel) GetByEmail(email string) (*User, error) {
-	query := ` SELECT id, created_at, first_name, last_name, date_of_birth, email, password_hash, activated, version, pic_no FROM users 
+	query := ` SELECT id, created_at, first_name, last_name, date_of_birth, email, password_hash, activated, version, pic_no, isAdmin FROM users 
 	WHERE email = $1`
 	var user User
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -126,7 +127,8 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 		&user.Password.hash,
 		&user.Activated,
 		&user.Version,
-		&user.PicNo)
+		&user.PicNo,
+		&user.IsAdmin)
 
 	if err != nil {
 		switch {
@@ -164,7 +166,8 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 	// Set up the SQL query.
-	query := ` SELECT users.id, users.created_at, users.first_name, users.last_name, users.date_of_birth, users.email, users.password_hash, users.activated, users.version, users.pic_no FROM users
+	query := ` SELECT users.id, users.created_at, users.first_name, users.last_name, users.date_of_birth, users.email, users.password_hash, users.activated, users.version, users.pic_no, users.isAdmin 
+	FROM users
 	INNER JOIN tokens ON users.id = tokens.user_id
 	WHERE tokens.hash = $1
 	AND tokens.scope = $2
@@ -185,7 +188,8 @@ func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error)
 		&user.Password.hash,
 		&user.Activated,
 		&user.Version,
-		&user.PicNo)
+		&user.PicNo,
+		&user.IsAdmin)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
