@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     email citext UNIQUE NOT NULL, 
     password_hash bytea NOT NULL, 
     activated bool NOT NULL, 
+    isAdmin bool NOT NULL DEFAULT FALSE, 
     version integer NOT NULL DEFAULT 1 );
     
 -- +goose Down
