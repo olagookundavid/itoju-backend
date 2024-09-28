@@ -2,7 +2,9 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/olagookundavid/itoju/internal/models"
@@ -10,17 +12,40 @@ import (
 
 func (app *Application) GetMenstrualCycle(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	id, err := app.Models.UserPeriod.GetMensesCycleId(user.ID)
+	ids, err := app.Models.UserPeriod.GetMensesCycleIds(user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+	var periodDays = []models.CycleDay{}
+	var mu sync.Mutex // Mutex to control access to periodDays
+	var wg sync.WaitGroup
 
-	periodDays, err := app.Models.UserPeriod.GetCycleDays(id, user.ID)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+	for i := 0; i < len(ids); i++ {
+		print(ids[i])
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			defer func() {
+				if err := recover(); err != nil {
+					app.Logger.PrintError(fmt.Errorf("%s", err), nil)
+				}
+			}()
+
+			cycleDays, err := app.Models.UserPeriod.GetCycleDays(id, user.ID)
+			if err != nil {
+				app.serverErrorResponse(w, r, err)
+				return
+			}
+
+			// Safely append the result to periodDays using a mutex
+			mu.Lock()
+			periodDays = append(periodDays, cycleDays...)
+			mu.Unlock()
+
+		}(ids[i])
 	}
+	wg.Wait()
 
 	env := envelope{
 		"message":     "Retrieved All Period data",

@@ -76,7 +76,7 @@ func (app *Application) invalidCredentialsResponse(w http.ResponseWriter, r *htt
 
 func (app *Application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("WWW-Authenticate", "Bearer")
-	message := "invalid or missing authentication token"
+	message := "Access denied, kindly login again!"
 	app.errorResponse(w, r, http.StatusUnauthorized, message)
 }
 func (app *Application) authenticationRequiredResponse(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +87,7 @@ func (app *Application) inactiveAccountResponse(w http.ResponseWriter, r *http.R
 	message := "your user account must be activated to access this resource"
 	app.errorResponse(w, r, http.StatusForbidden, message)
 }
-func (app *Application) notPermittedResponse(w http.ResponseWriter, r *http.Request) {
+func (app *Application) NotPermittedResponse(w http.ResponseWriter, r *http.Request) {
 	message := "your user account doesn't have the necessary permissions to access this resource"
 	app.errorResponse(w, r, http.StatusForbidden, message)
 }
