@@ -189,25 +189,32 @@ func (m *UserPeriodModel) GetCycleDay(id string) (*CycleDay, error) {
 	return &cycleDay, nil
 }
 
-func (m *UserPeriodModel) GetMensesCycleId(id string) (string, error) {
+func (m *UserPeriodModel) GetMensesCycleIds(id string) ([]string, error) {
 	if id == "" {
-		return "", ErrRecordNotFound
+		return nil, ErrRecordNotFound
 	}
-	query := ` SELECT id FROM menstrual_cycles WHERE user_id = $1 ORDER BY created_at ASC limit 1 `
-	var cycleDayId string
+	query := ` SELECT id FROM menstrual_cycles WHERE user_id = $1 ORDER BY created_at DESC LIMIT 3 `
+	var cycleDayIds []string
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(
-		&cycleDayId,
-	)
 
+	rows, err := m.DB.QueryContext(ctx, query, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return "", nil
-		default:
-			return "", err
-		}
+		return nil, err
 	}
-	return cycleDayId, nil
+	defer rows.Close()
+
+	for rows.Next() {
+		var cycleDayId string
+		if err := rows.Scan(&cycleDayId); err != nil {
+			return nil, err
+		}
+		cycleDayIds = append(cycleDayIds, cycleDayId)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return cycleDayIds, nil
 }
